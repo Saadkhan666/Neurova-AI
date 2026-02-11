@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neurova Ai | Universal Interface</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: { 850: '#1f2937', 900: '#111827', 950: '#0b0f19' },
+                        primary: { 500: '#3b82f6', 600: '#2563eb' }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #374151; }
+
+        /* Typography & Layout */
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .prose pre { background: #1e1e1e !important; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        .prose code { color: #eb5757; background: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.2rem; }
+        .dark .prose code { color: #e5e7eb; background: rgba(255,255,255,0.1); }
+        .prose p { margin-bottom: 0.75rem; line-height: 1.6; }
+        
+        /* Mobile Optimizations */
+        .mobile-height { height: 100dvh; } /* Dynamic Viewport Height */
+        
+        /* Message Bubbles */
+        .msg-user { background: #eff6ff; border-radius: 1.5rem 1.5rem 0 1.5rem; }
+        .dark .msg-user { background: #1e293b; }
+        .msg-ai { background: transparent; }
+        
+        /* Loader */
+        #loading { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; justify-content: center; align-items: center; font-weight: 600; color: #3b82f6; transition: opacity 0.5s; }
+        .dark #loading { background: #0b0f19; color: #60a5fa; }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 overflow-hidden mobile-height transition-colors duration-200">
+
+    <div id="loading">
+        <div class="text-center">
+            <i class="fa-solid fa-circle-nodes fa-spin fa-3x mb-4"></i>
+            <p>Initializing Neurova Ai...</p>
+        </div>
+    </div>
+
+    <div id="app" class="flex w-full h-full opacity-0 transition-opacity duration-500">
+        
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                <h1 class="font-bold text-xl flex items-center gap-2">
+                    <i class="fa-solid fa-brain text-blue-500"></i> Neurova
+                </h1>
+                <button id="closeSidebarBtn" class="md:hidden text-gray-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="p-4">
+                <button onclick="app.createNewChat()" class="w-full flex items-center gap-2 justify-center bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-full transition-all shadow-md">
+                    <i class="fa-solid fa-plus"></i> New Chat
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-2 space-y-1" id="chatList">
+                </div>
+
+            <div class="p-4 border-t border-gray-200 dark:border-gray-800 text-sm">
+                <button onclick="app.toggleSettings()" class="w-full text-left p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </button>
+                <button onclick="app.togglePrompts()" class="w-full text-left p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> Quick Prompts
+                </button>
+            </div>
+        </aside>
+
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden glass" onclick="app.toggleSidebar()"></div>
+
+        <main class="flex-1 flex flex-col h-full w-full md:ml-64 relative bg-white dark:bg-gray-950">
+            
+            <header class="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 shrink-0 bg-white/80 dark:bg-gray-950/80 backdrop-blur">
+                <div class="flex items-center gap-3">
+                    <button onclick="app.toggleSidebar()" class="md:hidden p-2 text-gray-600 dark:text-gray-300">
+                        <i class="fa-solid fa-bars fa-lg"></i>
+                    </button>
+                    <span id="currentModelDisplay" class="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-500">Loading...</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="app.toggleTheme()" class="p-2 text-gray-500 hover:text-blue-500 transition"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+                    <button onclick="app.exportChat('md')" class="p-2 text-gray-500 hover:text-green-500 transition" title="Export Markdown"><i class="fa-solid fa-download"></i></button>
+                    <button onclick="app.deleteCurrentChat()" class="p-2 text-gray-500 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </header>
+
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
+                <div id="welcomeState" class="h-full flex flex-col items-center justify-center text-center opacity-60">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
+                        <i class="fa-solid fa-brain text-white text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Hello, Sir.</h2>
+                    <p class="text-gray-500 dark:text-gray-400 max-w-md">I am Neurova. Configure your API key in settings to begin.</p>
+                </div>
+                </div>
+
+            <div class="shrink-0 p-4 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+                <div class="max-w-3xl mx-auto relative">
+                    <textarea id="userInput" rows="1" class="w-full bg-gray-100 dark:bg-gray-900 border-0 rounded-2xl pl-4 pr-24 py-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none max-h-32 text-base" placeholder="Ask Neurova anything..."></textarea>
+                    
+                    <div class="absolute right-2 bottom-2 flex gap-1">
+                         <button id="voiceBtn" onclick="app.toggleVoice()" class="p-2 text-gray-400 hover:text-red-500 rounded-full transition">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                        <button onclick="app.sendMessage()" id="sendBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-center mt-2 text-xs text-gray-400">
+                    Neurova Ai can make mistakes. Verify important info.
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Configuration</h3>
+                <button onclick="app.toggleSettings()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">OpenRouter API Key</label>
+                    <input type="password" id="apiKeyInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="sk-or-...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Model ID</label>
+                    <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="deepseek/deepseek-r1:free">
+                    <p class="text-xs text-gray-500 mt-1">Default: deepseek/deepseek-r1:free</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">System Prompt</label>
+                    <textarea id="systemPromptInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded px-3 py-2 h-20 text-sm focus:ring-2 focus:ring-blue-500" placeholder="You are a helpful assistant..."></textarea>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-800/50 flex justify-end">
+                <button onclick="app.saveSettings()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="promptsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+             <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Quick Prompts Library</h3>
+                <button onclick="app.togglePrompts()" class="text-gray-500"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto">
+                <button onclick="app.usePrompt('Explain this code step-by-step.')" class="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-left transition">
+                    <div class="font-bold text-sm mb-1">Code Explanation</div>
+                    <div class="text-xs text-gray-500 truncate">Explain this code step-by-step.</div>
+                </button>
+                <button onclick="app.usePrompt('Fix the bugs in the following code:')" class="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-left transition">
+                    <div class="font-bold text-sm mb-1">Debug Code</div>
+                    <div class="text-xs text-gray-500 truncate">Fix bugs in the following...</div>
+                </button>
+                <button onclick="app.usePrompt('Summarize this text in 3 bullet points.')" class="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-left transition">
+                    <div class="font-bold text-sm mb-1">Summarize</div>
+                    <div class="text-xs text-gray-500 truncate">Summarize in 3 bullet points.</div>
+                </button>
+                <button onclick="app.usePrompt('Act as a Senior Developer and Architect.')" class="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-left transition">
+                    <div class="font-bold text-sm mb-1">Expert Persona</div>
+                    <div class="text-xs text-gray-500 truncate">Act as a Senior Developer...</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * NEUROVA AI CORE LOGIC
+         * Zero Build Steps. Pure Vanilla JS.
+         */
+        
+        const app = {
+            state: {
+                chats: [],
+                currentChatId: null,
+                isSidebarOpen: false,
+                isGenerating: false,
+                isVoiceActive: false,
+                recognition: null,
+                settings: {
+                    apiKey: '',
+                    model: 'deepseek/deepseek-r1:free',
+                    systemPrompt: 'You are Neurova, a helpful and intelligent AI assistant.',
+                    theme: 'dark'
+                }
+            },
+
+            // --- Initialization ---
+            init() {
+                this.loadFromStorage();
+                this.applyTheme();
+                this.setupEventListeners();
+                this.setupMarked();
+                this.setupSpeechRecognition();
+                
+                // If no chats, create one
+                if (this.state.chats.length === 0) {
+                    this.createNewChat(false);
+                } else {
+                    // Load last chat or first one
+                    this.state.currentChatId = this.state.chats[0].id;
+                }
+
+                this.renderSidebar();
+                this.renderMessages();
+                this.updateUI();
+
+                // Hide Loader
+                setTimeout(() => {
+                    document.getElementById('loading').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('app').style.opacity = '1';
+                    }, 500);
+                }, 500);
+            },
+
+            loadFromStorage() {
+                const saved = localStorage.getItem('neurova_data');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    this.state.chats = parsed.chats || [];
+                    this.state.settings = { ...this.state.settings, ...parsed.settings };
+                }
+                
+                // Populate Settings Inputs
+                document.getElementById('apiKeyInput').value = this.state.settings.apiKey;
+                document.getElementById('modelInput').value = this.state.settings.model;
+                document.getElementById('systemPromptInput').value = this.state.settings.systemPrompt;
+            },
+
+            saveToStorage() {
+                const data = {
+                    chats: this.state.chats,
+                    settings: this.state.settings
+                };
+                localStorage.setItem('neurova_data', JSON.stringify(data));
+            },
+
+            setupMarked() {
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        const language = highlight.getLanguage(lang) ? lang : 'plaintext';
+                        return highlight.highlight(code, { language }).value;
+                    },
+                    breaks: true
+                });
+            },
+
+            setupSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.state.recognition = new SpeechRecognition();
+                    this.state.recognition.continuous = false;
+                    this.state.recognition.interimResults = false;
+                    this.state.recognition.lang = 'en-US';
+
+                    this.state.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        const input = document.getElementById('userInput');
+                        input.value += (input.value ? ' ' : '') + transcript;
+                        this.toggleVoice(false); // Turn off after result
+                        input.focus();
+                    };
+
+                    this.state.recognition.onerror = (event) => {
+                        console.error('Speech error', event);
+                        this.toggleVoice(false);
+                    };
+                    
+                    this.state.recognition.onend = () => {
+                        if(this.state.isVoiceActive) this.toggleVoice(false);
+                    };
+                } else {
+                    document.getElementById('voiceBtn').style.display = 'none';
+                }
+            },
+
+            setupEventListeners() {
+                const input = document.getElementById('userInput');
+                
+                // Auto-resize textarea
+                input.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                    if(this.value === '') this.style.height = 'auto';
+                });
+
+                // Enter to send (Shift+Enter for newline)
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+            },
+
+            // --- Core Logic ---
+
+            createNewChat(switchNow = true) {
+                const newChat = {
+                    id: Date.now().toString(),
+                    title: 'New Conversation',
+                    messages: [],
+                    created: Date.now()
+                };
+                this.state.chats.unshift(newChat);
+                if (switchNow) {
+                    this.state.currentChatId = newChat.id;
+                    this.renderSidebar();
+                    this.renderMessages();
+                    // Mobile: Close sidebar on new chat
+                    if(window.innerWidth < 768) this.toggleSidebar(false);
+                }
+                this.saveToStorage();
+            },
+
+            deleteCurrentChat() {
+                if(confirm('Are you sure you want to delete this chat?')) {
+                    this.state.chats = this.state.chats.filter(c => c.id !== this.state.currentChatId);
+                    if(this.state.chats.length === 0) {
+                        this.createNewChat(true);
+                    } else {
+                        this.state.currentChatId = this.state.chats[0].id;
+                    }
+                    this.renderSidebar();
+                    this.renderMessages();
+                    this.saveToStorage();
+                }
+            },
+
+            selectChat(id) {
+                this.state.currentChatId = id;
+                this.renderSidebar();
+                this.renderMessages();
+                if(window.innerWidth < 768) {
+                    this.toggleSidebar(false);
+                }
+            },
+
+            // --- UI Rendering ---
+
+            renderSidebar() {
+                const list = document.getElementById('chatList');
+          
