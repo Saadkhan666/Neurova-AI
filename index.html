@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neurova OS | Cloud Sync</title>
+    <title>Neurova OS | Vercel Edition</title>
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -51,9 +51,8 @@
             <div class="w-24 h-24 mx-auto bg-gradient-to-tr from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/20 animate-float">
                 <i class="fa-solid fa-brain text-white text-5xl"></i>
             </div>
-            
-            <h1 class="text-3xl font-bold mb-2 tracking-tight">Welcome to Neurova</h1>
-            <p class="text-gray-400 mb-8">The Universal AI Workspace</p>
+            <h1 class="text-3xl font-bold mb-2 tracking-tight">Neurova OS</h1>
+            <p class="text-gray-400 mb-8">Vercel Cloud Edition</p>
 
             <button onclick="app.auth.signIn()" class="w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-medium py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-xl group">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6 group-hover:scale-110 transition-transform">
@@ -61,8 +60,7 @@
             </button>
             
             <div class="mt-6 text-xs text-gray-400">
-                <p>Secure authentication via Firebase.</p>
-                <button onclick="app.auth.guest()" class="mt-4 underline hover:text-blue-500">Or continue as Guest (Local Only)</button>
+                <button onclick="app.auth.guest()" class="mt-4 underline hover:text-blue-500">Or continue as Guest (Local)</button>
             </div>
         </div>
     </div>
@@ -73,20 +71,17 @@
             <div class="p-4 h-16 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
                 <img id="userAvatar" src="" class="w-8 h-8 rounded-full bg-gray-300 object-cover hidden">
                 <div class="flex-1 min-w-0">
-                    <h3 id="userName" class="font-bold text-sm truncate">Guest User</h3>
-                    <p id="userEmail" class="text-[10px] text-gray-500 truncate">Local Session</p>
+                    <h3 id="userName" class="font-bold text-sm truncate">Guest</h3>
+                    <p id="userEmail" class="text-[10px] text-gray-500 truncate">Local</p>
                 </div>
-                <button onclick="app.auth.logout()" class="text-gray-400 hover:text-red-500" title="Sign Out"><i class="fa-solid fa-sign-out"></i></button>
+                <button onclick="app.auth.logout()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-sign-out"></i></button>
             </div>
-            
             <div class="p-3">
-                <button onclick="app.chat.new()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-medium shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2">
+                <button onclick="app.chat.new()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-medium shadow-md transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus"></i> New Chat
                 </button>
             </div>
-
             <div id="chatList" class="flex-1 overflow-y-auto px-2 space-y-1 py-2"></div>
-
             <div class="p-4 border-t border-gray-200 dark:border-gray-800 grid grid-cols-2 gap-2">
                 <button onclick="app.ui.toggleSettings()" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-xs flex items-center justify-center gap-2">
                     <i class="fa-solid fa-cog"></i> Settings
@@ -98,7 +93,7 @@
         </aside>
 
         <main class="flex-1 flex flex-col h-full relative min-w-0 bg-white dark:bg-gray-950">
-             <header class="md:hidden h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur sticky top-0 z-20">
+            <header class="md:hidden h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur sticky top-0 z-20">
                 <div class="font-bold flex items-center gap-2 text-blue-600"><i class="fa-solid fa-brain"></i> Neurova</div>
                 <button onclick="app.ui.toggleCanvas(true)" class="text-gray-500"><i class="fa-solid fa-code"></i></button>
             </header>
@@ -109,7 +104,7 @@
                         <i class="fa-solid fa-wand-magic-sparkles text-3xl text-blue-500"></i>
                     </div>
                     <h1 class="text-2xl font-bold">Ready to Create?</h1>
-                    <p class="text-gray-400 text-sm mt-2">Select a chat or type below.</p>
+                    <p class="text-gray-400 text-sm mt-2">Enter your API Key in Settings to begin.</p>
                 </div>
             </div>
 
@@ -122,7 +117,7 @@
                             <button onclick="app.chat.toggleWeb()" id="webBtn" class="p-2 text-gray-400 hover:text-green-500 rounded-full transition"><i class="fa-solid fa-globe"></i></button>
                             <button onclick="document.getElementById('fileUpload').click()" class="p-2 text-gray-400 hover:text-blue-500 rounded-full transition"><i class="fa-solid fa-paperclip"></i></button>
                             <input type="file" id="fileUpload" class="hidden" multiple onchange="app.files.handle(this)">
-                            <button onclick="app.chat.send()" class="bg-blue-600 text-white rounded-xl w-8 h-8 flex items-center justify-center shadow-lg"><i class="fa-solid fa-arrow-up text-sm"></i></button>
+                            <button onclick="app.chat.send()" id="sendBtn" class="bg-blue-600 text-white rounded-xl w-8 h-8 flex items-center justify-center shadow-lg"><i class="fa-solid fa-arrow-up text-sm"></i></button>
                         </div>
                     </div>
                 </div>
@@ -142,9 +137,18 @@
         <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md p-6">
             <h2 class="font-bold mb-4">Settings</h2>
             <div class="space-y-4">
-                <input type="password" id="apiKeyInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2" placeholder="OpenRouter API Key">
-                <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2" value="deepseek/deepseek-r1:free">
-                <textarea id="sysPromptInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 h-24" placeholder="System Prompt..."></textarea>
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold">OpenRouter API Key</label>
+                    <input type="password" id="apiKeyInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 mt-1" placeholder="sk-or-...">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold">Model ID</label>
+                    <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 mt-1" value="deepseek/deepseek-r1:free">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold">System Prompt</label>
+                    <textarea id="sysPromptInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 h-24 mt-1" placeholder="System Prompt..."></textarea>
+                </div>
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <button onclick="app.ui.toggleSettings()" class="text-gray-500 px-4">Cancel</button>
@@ -155,151 +159,99 @@
 
     <script>
         // ==========================================
-        // 🛑 STOP HERE! PASTE YOUR FIREBASE KEYS BELOW
+        // 🛑 PASTE FIREBASE CONFIG HERE
         // ==========================================
-        
         const firebaseConfig = {
-    apiKey: "AIzaSyCB5b4co_uTC2U7xP0gsJ90kXzG5y92XdA",
-    authDomain: "neurova-ai-6b79e.firebaseapp.com",
-    projectId: "neurova-ai-6b79e",
-    storageBucket: "neurova-ai-6b79e.firebasestorage.app",
-    messagingSenderId: "771416729770",
-    appId: "1:771416729770:web:8b781ed3d3845198cd88d3",
-    measurementId: "G-G3E38VSKM7"
-  };
+  apiKey: "AIzaSyCB5b4co_uTC2U7xP0gsJ90kXzG5y92XdA",
+  authDomain: "neurova-ai-6b79e.firebaseapp.com",
+  projectId: "neurova-ai-6b79e",
+  storageBucket: "neurova-ai-6b79e.firebasestorage.app",
+  messagingSenderId: "771416729770",
+  appId: "1:771416729770:web:8b781ed3d3845198cd88d3",
+  measurementId: "G-G3E38VSKM7"
+};
 
-        // ==========================================
-        // END OF CONFIGURATION
-        // ==========================================
-
-        // Initialize Firebase
         let auth = null;
         try {
-            // Check if user actually pasted the key
             if(Object.keys(firebaseConfig).length > 0) {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
-            } else {
-                console.warn("Firebase Config missing. Google Auth disabled.");
             }
         } catch(e) { console.error("Firebase Init Error", e); }
 
-        // ==========================================
-        // APPLICATION LOGIC
-        // ==========================================
         const app = {
             data: {
-                user: null, // Google User Data
-                chats: [],
-                activeId: null,
+                user: null, chats: [], activeId: null,
                 settings: { apiKey: '', model: 'deepseek/deepseek-r1:free', sysPrompt: 'You are Neurova.', theme: 'dark' },
-                webMode: false,
-                uploads: []
+                webMode: false, uploads: []
             },
 
-            // --- AUTH MODULE ---
             auth: {
                 init() {
-                    // Check persistent login state
                     if(auth) {
                         auth.onAuthStateChanged((user) => {
-                            if (user) {
-                                this.onLoginSuccess(user);
-                            } else {
-                                // If locally authenticated as guest previously
-                                if(localStorage.getItem('neurova_guest')) {
-                                    this.guest();
-                                }
-                            }
+                            if (user) this.onLoginSuccess(user);
+                            else if(localStorage.getItem('neurova_guest')) this.guest();
                         });
-                    } else {
-                        // If no firebase, check for guest
-                         if(localStorage.getItem('neurova_guest')) this.guest();
-                    }
+                    } else if(localStorage.getItem('neurova_guest')) this.guest();
                 },
-                
                 signIn() {
-                    if(!auth) { alert("Please paste your Firebase Config in the code (Line 250) first!"); return; }
+                    if(!auth) { alert("Firebase Config Missing in code!"); return; }
                     const provider = new firebase.auth.GoogleAuthProvider();
-                    auth.signInWithPopup(provider)
-                        .then((result) => this.onLoginSuccess(result.user))
-                        .catch((error) => alert("Login Failed: " + error.message));
+                    auth.signInWithPopup(provider).then((r) => this.onLoginSuccess(r.user)).catch((e) => alert(e.message));
                 },
-
                 guest() {
                     localStorage.setItem('neurova_guest', 'true');
                     this.onLoginSuccess({ displayName: 'Guest User', photoURL: null, email: 'Local Session' });
                 },
-
                 logout() {
                     if(auth) auth.signOut();
                     localStorage.removeItem('neurova_guest');
                     location.reload();
                 },
-
                 onLoginSuccess(user) {
                     app.data.user = user;
-                    
-                    // UI Transitions
                     const gate = document.getElementById('authGate');
-                    const container = document.getElementById('appContainer');
-                    
+                    const cont = document.getElementById('appContainer');
                     gate.style.opacity = '0';
                     setTimeout(() => gate.style.display = 'none', 700);
-                    
-                    container.style.opacity = '1';
-                    container.style.pointerEvents = 'auto';
-
-                    // Update Sidebar Profile
+                    cont.style.opacity = '1';
+                    cont.style.pointerEvents = 'auto';
                     document.getElementById('userName').innerText = user.displayName;
                     document.getElementById('userEmail').innerText = user.email;
                     if(user.photoURL) {
-                        const av = document.getElementById('userAvatar');
-                        av.src = user.photoURL;
-                        av.classList.remove('hidden');
+                        document.getElementById('userAvatar').src = user.photoURL;
+                        document.getElementById('userAvatar').classList.remove('hidden');
                     }
-                    
-                    app.init(); // Start the main app logic
+                    app.init();
                 }
             },
 
-            // --- MAIN INIT ---
             init() {
                 this.loadStorage();
                 this.ui.applyTheme();
-                
-                // Load saved settings to inputs
                 document.getElementById('apiKeyInput').value = this.data.settings.apiKey;
                 document.getElementById('modelInput').value = this.data.settings.model;
                 document.getElementById('sysPromptInput').value = this.data.settings.sysPrompt;
-
                 if(this.data.chats.length === 0) app.chat.new(false);
                 else app.chat.load(this.data.chats[0].id);
-
-                // Listeners
-                const input = document.getElementById('userInput');
-                input.addEventListener('keydown', (e) => {
+                document.getElementById('userInput').addEventListener('keydown', (e) => {
                    if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); app.chat.send(); } 
                 });
             },
 
             loadStorage() {
-                const saved = localStorage.getItem('neurova_v5');
+                const saved = localStorage.getItem('neurova_v6');
                 if(saved) {
                     const parsed = JSON.parse(saved);
                     this.data.chats = parsed.chats || [];
                     this.data.settings = {...this.data.settings, ...parsed.settings};
                 }
             },
-
             saveStorage() {
-                localStorage.setItem('neurova_v5', JSON.stringify({
-                    chats: this.data.chats,
-                    settings: this.data.settings
-                }));
+                localStorage.setItem('neurova_v6', JSON.stringify({ chats: this.data.chats, settings: this.data.settings }));
             },
 
-            // --- CHAT MODULE ---
             chat: {
                 new(render = true) {
                     const chat = { id: Date.now(), title: 'New Chat', messages: [] };
@@ -312,10 +264,7 @@
                     app.data.activeId = id;
                     const chat = app.data.chats.find(c => c.id == id);
                     const container = document.getElementById('chatContainer');
-                    
-                    // Reset View
                     container.innerHTML = `<div id="welcome" class="${(!chat || chat.messages.length===0)?'flex':'hidden'} h-full flex-col items-center justify-center text-center"><h1 class="font-bold text-2xl">Ready?</h1></div>`;
-                    
                     if(chat) chat.messages.forEach(m => this.append(m));
                     app.ui.renderHistory();
                 },
@@ -323,25 +272,14 @@
                     const container = document.getElementById('chatContainer');
                     const div = document.createElement('div');
                     div.className = `w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
-                    
                     let attachHTML = '';
                     if(msg.attachments && msg.attachments.length) {
                          attachHTML = `<div class="flex gap-2 mb-2 flex-wrap justify-end">` + 
                             msg.attachments.map(u => `<img src="${u}" class="w-24 h-24 rounded-lg object-cover border border-gray-700">`).join('') + 
                             `</div>`;
                     }
-
                     const content = msg.role === 'user' ? msg.content : DOMPurify.sanitize(marked.parse(msg.content));
-                    
-                    div.innerHTML = `
-                        <div class="max-w-[85%]">
-                            ${attachHTML}
-                            <div class="${msg.role === 'user' ? 'bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2' : 'prose dark:prose-invert'}">
-                                ${content}
-                            </div>
-                        </div>
-                    `;
-                    
+                    div.innerHTML = `<div class="max-w-[85%]">${attachHTML}<div class="${msg.role === 'user' ? 'bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2' : 'prose dark:prose-invert'}">${content}</div></div>`;
                     if(msg.role !== 'user') div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
                     container.appendChild(div);
                     container.scrollTop = container.scrollHeight;
@@ -350,36 +288,35 @@
                     const input = document.getElementById('userInput');
                     const text = input.value.trim();
                     const uploads = app.data.uploads;
-                    
                     if(!text && uploads.length === 0) return;
-                    if(!app.data.settings.apiKey) { app.ui.toggleSettings(); return; }
+                    
+                    // --- SAFETY CHECK FOR API KEY ---
+                    if(!app.data.settings.apiKey) { 
+                        app.ui.toggleSettings(); 
+                        alert("Please enter your OpenRouter API Key in settings."); 
+                        return; 
+                    }
 
                     input.value = '';
                     app.data.uploads = [];
                     app.ui.renderDock();
                     document.getElementById('welcome').classList.add('hidden');
+                    const btn = document.getElementById('sendBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
                     const chat = app.data.chats.find(c => c.id == app.data.activeId);
-                    
-                    // Handle Images
                     const imgUrls = uploads.filter(u => u.type.startsWith('image')).map(u => u.content);
-                    
                     const userMsg = { role: 'user', content: text, attachments: imgUrls };
                     chat.messages.push(userMsg);
                     if(chat.messages.length === 1) chat.title = text.slice(0,20) || "Conversation";
-                    
                     this.append(userMsg);
                     app.saveStorage();
 
-                    // API Call
                     const payload = [{ role: 'system', content: app.data.settings.sysPrompt }];
-                    // Add history + current
                     chat.messages.forEach(m => {
                          if(m.attachments && m.attachments.length) {
-                             payload.push({ role: m.role, content: [
-                                 { type: 'text', text: m.content },
-                                 ...m.attachments.map(u => ({ type: 'image_url', image_url: { url: u } }))
-                             ]});
+                             payload.push({ role: m.role, content: [{ type: 'text', text: m.content }, ...m.attachments.map(u => ({ type: 'image_url', image_url: { url: u } }))] });
                          } else {
                              payload.push({ role: m.role, content: m.content });
                          }
@@ -394,30 +331,39 @@
                                 messages: payload
                             })
                         });
+
                         const json = await res.json();
-                        const aiText = json.choices[0].message.content;
                         
+                        // --- ERROR TRAP ---
+                        if(json.error) {
+                            throw new Error(json.error.message || "Unknown API Error");
+                        }
+                        if(!json.choices || json.choices.length === 0) {
+                            throw new Error("API returned no content. Check your balance.");
+                        }
+
+                        const aiText = json.choices[0].message.content;
                         const aiMsg = { role: 'assistant', content: aiText };
                         chat.messages.push(aiMsg);
                         this.append(aiMsg);
                         app.saveStorage();
-                        
-                        // Check Canvas
                         if(aiText.includes('```html')) {
                              const code = aiText.match(/```html([\s\S]*?)```/)[1];
                              document.getElementById('canvasFrame').srcdoc = code;
                              app.ui.toggleCanvas(true);
                         }
-
-                    } catch(e) { alert("Error: " + e.message); }
+                    } catch(e) { 
+                        alert("Neurova Error: " + e.message); 
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-arrow-up text-sm"></i>';
+                    }
                 },
                 toggleWeb() {
                     app.data.webMode = !app.data.webMode;
                     document.getElementById('webBtn').classList.toggle('text-green-500');
                 }
             },
-
-            // --- FILE HANDLER ---
             files: {
                 handle(input) {
                     Array.from(input.files).forEach(file => {
@@ -430,8 +376,6 @@
                     });
                 }
             },
-
-            // --- UI HELPERS ---
             ui: {
                 toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); },
                 saveSettings() {
@@ -464,11 +408,7 @@
                 renderDock() {
                     const dock = document.getElementById('previewDock');
                     dock.classList.toggle('hidden', app.data.uploads.length === 0);
-                    dock.innerHTML = app.data.uploads.map(u => 
-                        u.type.startsWith('image') 
-                        ? `<img src="${u.content}" class="w-12 h-12 rounded object-cover border border-gray-600">`
-                        : `<div class="w-12 h-12 rounded bg-gray-800 flex items-center justify-center text-[8px] text-center border border-gray-600 overflow-hidden">${u.name}</div>`
-                    ).join('');
+                    dock.innerHTML = app.data.uploads.map(u => u.type.startsWith('image') ? `<img src="${u.content}" class="w-12 h-12 rounded object-cover border border-gray-600">` : `<div class="w-12 h-12 rounded bg-gray-800 flex items-center justify-center text-[8px] text-center border border-gray-600 overflow-hidden">${u.name}</div>`).join('');
                 },
                 toggleCanvas(show) {
                     const p = document.getElementById('canvasPanel');
@@ -476,8 +416,6 @@
                 }
             }
         };
-
-        // Start Auth Listener
         window.onload = () => app.auth.init();
     </script>
 </body>
