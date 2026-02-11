@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neurova OS | Native Interface</title>
-    
+    <title>Neurova OS | Cloud Sync</title>
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,14 +16,17 @@
                         gray: { 850: '#1a1d21', 900: '#111316', 950: '#0b0c0e' },
                         blue: { 600: '#2563eb', 700: '#1d4ed8' }
                     },
-                    animation: {
-                        'bounce-slow': 'bounce 3s infinite',
-                    }
+                    animation: { 'float': 'float 6s ease-in-out infinite' },
+                    keyframes: { float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } } }
                 }
             }
         }
     </script>
     
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -32,569 +34,451 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .dark .glass { background: rgba(0, 0, 0, 0.2); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #374151; }
-        
-        .prose pre { background: #0d1117 !important; border-radius: 8px; padding: 12px; border: 1px solid #30363d; }
-        .msg-user { background-color: #f3f4f6; border-radius: 20px 20px 4px 20px; }
-        .dark .msg-user { background-color: #1f2937; color: #f3f4f6; }
-        
-        /* Canvas Panel Slide */
         #canvasPanel { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .canvas-open #canvasPanel { transform: translateX(0); }
-        .canvas-closed #canvasPanel { transform: translateX(100%); }
-
-        /* Delete Button Hover Effect */
-        .attachment-item:hover .delete-btn { opacity: 1; transform: scale(1); }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 h-full flex transition-colors duration-300">
 
-    <div id="loader" class="fixed inset-0 bg-white dark:bg-gray-950 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="relative">
-            <div class="w-16 h-16 border-4 border-blue-100 dark:border-gray-800 rounded-full"></div>
-            <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0"></div>
+    <div id="authGate" class="fixed inset-0 z-[100] bg-white dark:bg-gray-950 flex flex-col items-center justify-center transition-all duration-700">
+        <div class="relative w-full max-w-md p-8 text-center">
+            <div class="w-24 h-24 mx-auto bg-gradient-to-tr from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/20 animate-float">
+                <i class="fa-solid fa-brain text-white text-5xl"></i>
+            </div>
+            
+            <h1 class="text-3xl font-bold mb-2 tracking-tight">Welcome to Neurova</h1>
+            <p class="text-gray-400 mb-8">The Universal AI Workspace</p>
+
+            <button onclick="app.auth.signIn()" class="w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-medium py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-xl group">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6 group-hover:scale-110 transition-transform">
+                <span>Continue with Google</span>
+            </button>
+            
+            <div class="mt-6 text-xs text-gray-400">
+                <p>Secure authentication via Firebase.</p>
+                <button onclick="app.auth.guest()" class="mt-4 underline hover:text-blue-500">Or continue as Guest (Local Only)</button>
+            </div>
         </div>
-        <p class="text-sm font-medium mt-4 animate-pulse">Initializing Neurova OS...</p>
     </div>
 
-    <aside id="sidebar" class="w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col hidden md:flex shrink-0">
-        <div class="p-4 h-16 flex items-center justify-between font-bold text-lg border-b border-gray-200 dark:border-gray-800">
-            <div class="flex items-center gap-2">
-                <span class="text-blue-600"><i class="fa-solid fa-brain"></i></span> Neurova
-            </div>
-            <span class="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-2 py-0.5 rounded uppercase tracking-wider">Beta</span>
-        </div>
+    <div id="appContainer" class="flex-1 flex h-full opacity-0 transition-opacity duration-1000 pointer-events-none">
         
-        <div class="p-3">
-            <button onclick="app.newChat()" class="w-full bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-xl py-3 text-sm font-medium transition flex items-center justify-center gap-2 shadow-sm">
-                <i class="fa-solid fa-plus text-blue-500"></i> New Chat
-            </button>
-        </div>
-
-        <div id="chatList" class="flex-1 overflow-y-auto px-2 space-y-1 py-2">
-            </div>
-
-        <div class="p-4 border-t border-gray-200 dark:border-gray-800 grid grid-cols-2 gap-2">
-            <button onclick="app.toggleSettings()" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-xs flex items-center justify-center gap-2 transition">
-                <i class="fa-solid fa-cog"></i> Settings
-            </button>
-            <button onclick="app.toggleTheme()" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-xs flex items-center justify-center gap-2 transition">
-                <i id="themeIcon" class="fa-solid fa-moon"></i> Theme
-            </button>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col h-full relative min-w-0 bg-white dark:bg-gray-950">
-        
-        <header class="md:hidden h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur sticky top-0 z-20">
-            <div class="font-bold flex items-center gap-2">
-                <i class="fa-solid fa-brain text-blue-600"></i> Neurova
-            </div>
-            <div class="flex gap-3">
-                 <button onclick="app.toggleCanvas(true)" class="text-gray-500"><i class="fa-solid fa-code"></i></button>
-                 <button onclick="document.getElementById('sidebar').classList.toggle('hidden'); document.getElementById('sidebar').classList.toggle('absolute'); document.getElementById('sidebar').classList.toggle('z-50'); document.getElementById('sidebar').classList.toggle('h-full');" class="text-gray-500"><i class="fa-solid fa-bars"></i></button>
-            </div>
-        </header>
-
-        <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
-            <div id="welcome" class="h-full flex flex-col items-center justify-center text-center opacity-100 transition-opacity duration-500">
-                <div class="w-20 h-20 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mb-6 shadow-2xl text-white text-3xl animate-float">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <aside class="w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col hidden md:flex shrink-0">
+            <div class="p-4 h-16 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
+                <img id="userAvatar" src="" class="w-8 h-8 rounded-full bg-gray-300 object-cover hidden">
+                <div class="flex-1 min-w-0">
+                    <h3 id="userName" class="font-bold text-sm truncate">Guest User</h3>
+                    <p id="userEmail" class="text-[10px] text-gray-500 truncate">Local Session</p>
                 </div>
-                <h1 class="text-3xl font-bold mb-3 tracking-tight">Neurova OS</h1>
-                <p class="text-gray-400 max-w-md text-sm">
-                    Ready to code, design, and analyze.<br>
-                    <span class="opacity-60 text-xs mt-2 block">Upload images or drop text files to begin.</span>
-                </p>
+                <button onclick="app.auth.logout()" class="text-gray-400 hover:text-red-500" title="Sign Out"><i class="fa-solid fa-sign-out"></i></button>
             </div>
-        </div>
+            
+            <div class="p-3">
+                <button onclick="app.chat.new()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-medium shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i> New Chat
+                </button>
+            </div>
 
-        <div class="p-4 bg-white dark:bg-gray-950 z-20 relative">
-            <div class="max-w-3xl mx-auto relative group">
-                
-                <div id="previewDock" class="hidden flex gap-3 p-3 mb-2 overflow-x-auto bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl">
+            <div id="chatList" class="flex-1 overflow-y-auto px-2 space-y-1 py-2"></div>
+
+            <div class="p-4 border-t border-gray-200 dark:border-gray-800 grid grid-cols-2 gap-2">
+                <button onclick="app.ui.toggleSettings()" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cog"></i> Settings
+                </button>
+                <button onclick="app.ui.toggleTheme()" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-xs flex items-center justify-center gap-2">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i> Theme
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full relative min-w-0 bg-white dark:bg-gray-950">
+             <header class="md:hidden h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur sticky top-0 z-20">
+                <div class="font-bold flex items-center gap-2 text-blue-600"><i class="fa-solid fa-brain"></i> Neurova</div>
+                <button onclick="app.ui.toggleCanvas(true)" class="text-gray-500"><i class="fa-solid fa-code"></i></button>
+            </header>
+
+            <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
+                <div id="welcome" class="h-full flex flex-col items-center justify-center text-center">
+                    <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-3xl flex items-center justify-center mb-6 animate-pulse">
+                        <i class="fa-solid fa-wand-magic-sparkles text-3xl text-blue-500"></i>
                     </div>
+                    <h1 class="text-2xl font-bold">Ready to Create?</h1>
+                    <p class="text-gray-400 text-sm mt-2">Select a chat or type below.</p>
+                </div>
+            </div>
 
-                <div class="relative bg-gray-100 dark:bg-gray-900 rounded-3xl border border-transparent focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-sm">
-                    <textarea id="userInput" rows="1" class="w-full bg-transparent border-none text-base px-5 py-4 pr-32 focus:ring-0 resize-none max-h-48" placeholder="Ask anything..."></textarea>
-                    
-                    <div class="absolute right-2 bottom-2 flex items-center gap-1">
-                        <button id="webBtn" onclick="app.toggleWeb()" class="p-2 text-gray-400 hover:text-green-500 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition" title="Search Web">
-                            <i class="fa-solid fa-globe"></i>
-                        </button>
-                        
-                        <button onclick="document.getElementById('fileUpload').click()" class="p-2 text-gray-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition" title="Upload File">
-                            <i class="fa-solid fa-paperclip"></i>
-                        </button>
-                        <input type="file" id="fileUpload" class="hidden" multiple onchange="app.handleFiles(this)">
-                        
-                        <button onclick="app.send()" id="sendBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl w-10 h-10 flex items-center justify-center transition-transform active:scale-95 disabled:opacity-50 ml-1 shadow-lg shadow-blue-600/20">
-                            <i class="fa-solid fa-arrow-up"></i>
-                        </button>
+            <div class="p-4 bg-white dark:bg-gray-950 z-20">
+                <div class="max-w-3xl mx-auto relative group">
+                    <div id="previewDock" class="hidden flex gap-2 p-2 mb-2 overflow-x-auto bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800"></div>
+                    <div class="relative bg-gray-100 dark:bg-gray-900 rounded-2xl border border-transparent focus-within:border-blue-500 transition-colors">
+                        <textarea id="userInput" rows="1" class="w-full bg-transparent border-none px-4 py-3 pr-32 focus:ring-0 resize-none max-h-40" placeholder="Ask Neurova..."></textarea>
+                        <div class="absolute right-2 bottom-2 flex items-center gap-1">
+                            <button onclick="app.chat.toggleWeb()" id="webBtn" class="p-2 text-gray-400 hover:text-green-500 rounded-full transition"><i class="fa-solid fa-globe"></i></button>
+                            <button onclick="document.getElementById('fileUpload').click()" class="p-2 text-gray-400 hover:text-blue-500 rounded-full transition"><i class="fa-solid fa-paperclip"></i></button>
+                            <input type="file" id="fileUpload" class="hidden" multiple onchange="app.files.handle(this)">
+                            <button onclick="app.chat.send()" class="bg-blue-600 text-white rounded-xl w-8 h-8 flex items-center justify-center shadow-lg"><i class="fa-solid fa-arrow-up text-sm"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="text-center mt-2 text-[10px] text-gray-400 flex justify-center gap-3">
-                <span id="modelLabel">DeepSeek R1</span>
-                <span class="text-gray-600">•</span>
-                <span id="fileCountLabel">0 files</span>
-            </div>
-        </div>
-    </main>
+        </main>
 
-    <aside id="canvasPanel" class="fixed inset-y-0 right-0 w-full md:w-[45%] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl z-40 transform translate-x-full flex flex-col">
-        <div class="h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-gray-50 dark:bg-gray-900">
-            <span class="font-bold text-sm text-blue-600 uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-layer-group"></i> Holo-Canvas
-            </span>
-            <div class="flex gap-1">
-                <button onclick="app.downloadCanvas()" class="p-2 text-gray-500 hover:text-green-500 rounded hover:bg-gray-200 dark:hover:bg-gray-800"><i class="fa-solid fa-download"></i></button>
-                <button onclick="app.toggleCanvas(false)" class="p-2 text-gray-500 hover:text-red-500 rounded hover:bg-gray-200 dark:hover:bg-gray-800"><i class="fa-solid fa-times"></i></button>
+        <aside id="canvasPanel" class="fixed inset-y-0 right-0 w-full md:w-[45%] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl z-40 transform translate-x-full flex flex-col">
+            <div class="h-14 border-b flex items-center justify-between px-4 bg-gray-50 dark:bg-gray-900">
+                <span class="font-bold text-xs uppercase tracking-wider">Holo-Canvas</span>
+                <button onclick="app.ui.toggleCanvas(false)" class="text-red-500"><i class="fa-solid fa-times"></i></button>
             </div>
-        </div>
-        <div class="flex-1 bg-gray-100 dark:bg-black relative">
-            <iframe id="canvasFrame" class="w-full h-full border-none bg-white"></iframe>
-            <div id="canvasPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 select-none">
-                <i class="fa-brands fa-html5 fa-3x mb-3 opacity-50"></i>
-                <p class="text-sm font-medium">Waiting for code generation...</p>
-            </div>
-        </div>
-    </aside>
+            <iframe id="canvasFrame" class="flex-1 bg-white border-none"></iframe>
+        </aside>
+    </div>
 
     <div id="settingsModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform animate-float">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
-                <h2 class="font-bold">System Configuration</h2>
-                <button onclick="app.toggleSettings()"><i class="fa-solid fa-times text-gray-500"></i></button>
+        <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md p-6">
+            <h2 class="font-bold mb-4">Settings</h2>
+            <div class="space-y-4">
+                <input type="password" id="apiKeyInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2" placeholder="OpenRouter API Key">
+                <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2" value="deepseek/deepseek-r1:free">
+                <textarea id="sysPromptInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 h-24" placeholder="System Prompt..."></textarea>
             </div>
-            <div class="p-6 space-y-5">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">OpenRouter API Key</label>
-                    <input type="password" id="apiKeyInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500" placeholder="sk-or-...">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Model ID</label>
-                    <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl px-4 py-3 text-sm font-mono" value="deepseek/deepseek-r1:free">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">System Personality</label>
-                    <textarea id="sysPromptInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl px-4 py-3 text-sm h-24 resize-none" placeholder="You are a helpful assistant..."></textarea>
-                </div>
-            </div>
-            <div class="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/50">
-                <button onclick="app.saveSettings()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg">Save Changes</button>
+            <div class="mt-6 flex justify-end gap-2">
+                <button onclick="app.ui.toggleSettings()" class="text-gray-500 px-4">Cancel</button>
+                <button onclick="app.ui.saveSettings()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Save</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- BRAIN: DOCUMENT READER ---
-        const NeuroDocs = {
-            read(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve({ name: file.name, content: e.target.result, type: file.type });
-                    reader.onerror = reject;
-                    
-                    if (file.type.startsWith('image/')) {
-                        reader.readAsDataURL(file); // Base64 for images
-                    } else {
-                        reader.readAsText(file); // Text for code/docs
-                    }
-                });
-            }
-        };
+        // ==========================================
+        // 🛑 STOP HERE! PASTE YOUR FIREBASE KEYS BELOW
+        // ==========================================
+        
+        const firebaseConfig = {
+    apiKey: "AIzaSyCB5b4co_uTC2U7xP0gsJ90kXzG5y92XdA",
+    authDomain: "neurova-ai-6b79e.firebaseapp.com",
+    projectId: "neurova-ai-6b79e",
+    storageBucket: "neurova-ai-6b79e.firebasestorage.app",
+    messagingSenderId: "771416729770",
+    appId: "1:771416729770:web:8b781ed3d3845198cd88d3",
+    measurementId: "G-G3E38VSKM7"
+  };
 
-        // --- APP LOGIC ---
+        // ==========================================
+        // END OF CONFIGURATION
+        // ==========================================
+
+        // Initialize Firebase
+        let auth = null;
+        try {
+            // Check if user actually pasted the key
+            if(Object.keys(firebaseConfig).length > 0) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+            } else {
+                console.warn("Firebase Config missing. Google Auth disabled.");
+            }
+        } catch(e) { console.error("Firebase Init Error", e); }
+
+        // ==========================================
+        // APPLICATION LOGIC
+        // ==========================================
         const app = {
             data: {
+                user: null, // Google User Data
                 chats: [],
                 activeId: null,
-                settings: {
-                    apiKey: '',
-                    model: 'deepseek/deepseek-r1:free',
-                    sysPrompt: 'You are Neurova. If providing HTML code, provide the full file.',
-                    theme: 'dark'
-                },
+                settings: { apiKey: '', model: 'deepseek/deepseek-r1:free', sysPrompt: 'You are Neurova.', theme: 'dark' },
                 webMode: false,
-                uploads: [] // Array of { type: 'img'|'doc', content: string, name: string }
+                uploads: []
             },
 
-            init() {
-                // Safety Loader Removal
-                setTimeout(() => {
-                    document.getElementById('loader').style.opacity = '0';
-                    setTimeout(() => document.getElementById('loader').remove(), 500);
-                }, 800);
-
-                // Load Storage
-                try {
-                    const saved = localStorage.getItem('neurova_v4');
-                    if(saved) {
-                        const parsed = JSON.parse(saved);
-                        this.data.chats = parsed.chats || [];
-                        this.data.settings = {...this.data.settings, ...parsed.settings};
+            // --- AUTH MODULE ---
+            auth: {
+                init() {
+                    // Check persistent login state
+                    if(auth) {
+                        auth.onAuthStateChanged((user) => {
+                            if (user) {
+                                this.onLoginSuccess(user);
+                            } else {
+                                // If locally authenticated as guest previously
+                                if(localStorage.getItem('neurova_guest')) {
+                                    this.guest();
+                                }
+                            }
+                        });
+                    } else {
+                        // If no firebase, check for guest
+                         if(localStorage.getItem('neurova_guest')) this.guest();
                     }
-                } catch(e) { console.error("Load error", e); }
+                },
+                
+                signIn() {
+                    if(!auth) { alert("Please paste your Firebase Config in the code (Line 250) first!"); return; }
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    auth.signInWithPopup(provider)
+                        .then((result) => this.onLoginSuccess(result.user))
+                        .catch((error) => alert("Login Failed: " + error.message));
+                },
 
-                // Apply UI
-                this.applyTheme();
+                guest() {
+                    localStorage.setItem('neurova_guest', 'true');
+                    this.onLoginSuccess({ displayName: 'Guest User', photoURL: null, email: 'Local Session' });
+                },
+
+                logout() {
+                    if(auth) auth.signOut();
+                    localStorage.removeItem('neurova_guest');
+                    location.reload();
+                },
+
+                onLoginSuccess(user) {
+                    app.data.user = user;
+                    
+                    // UI Transitions
+                    const gate = document.getElementById('authGate');
+                    const container = document.getElementById('appContainer');
+                    
+                    gate.style.opacity = '0';
+                    setTimeout(() => gate.style.display = 'none', 700);
+                    
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
+
+                    // Update Sidebar Profile
+                    document.getElementById('userName').innerText = user.displayName;
+                    document.getElementById('userEmail').innerText = user.email;
+                    if(user.photoURL) {
+                        const av = document.getElementById('userAvatar');
+                        av.src = user.photoURL;
+                        av.classList.remove('hidden');
+                    }
+                    
+                    app.init(); // Start the main app logic
+                }
+            },
+
+            // --- MAIN INIT ---
+            init() {
+                this.loadStorage();
+                this.ui.applyTheme();
+                
+                // Load saved settings to inputs
                 document.getElementById('apiKeyInput').value = this.data.settings.apiKey;
                 document.getElementById('modelInput').value = this.data.settings.model;
                 document.getElementById('sysPromptInput').value = this.data.settings.sysPrompt;
 
-                // Setup Chat
-                if(this.data.chats.length === 0) this.newChat(false);
-                else this.loadChat(this.data.chats[0].id);
+                if(this.data.chats.length === 0) app.chat.new(false);
+                else app.chat.load(this.data.chats[0].id);
 
                 // Listeners
                 const input = document.getElementById('userInput');
-                input.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-                });
                 input.addEventListener('keydown', (e) => {
-                    if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); }
+                   if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); app.chat.send(); } 
                 });
+            },
 
-                // Service Worker Check
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('./sw.js').catch(() => {});
+            loadStorage() {
+                const saved = localStorage.getItem('neurova_v5');
+                if(saved) {
+                    const parsed = JSON.parse(saved);
+                    this.data.chats = parsed.chats || [];
+                    this.data.settings = {...this.data.settings, ...parsed.settings};
                 }
             },
 
-            save() {
-                localStorage.setItem('neurova_v4', JSON.stringify({
+            saveStorage() {
+                localStorage.setItem('neurova_v5', JSON.stringify({
                     chats: this.data.chats,
                     settings: this.data.settings
                 }));
             },
 
-            // --- FILE HANDLING (NEW) ---
-            async handleFiles(input) {
-                const files = Array.from(input.files);
-                if(files.length === 0) return;
-
-                for(const file of files) {
-                    try {
-                        const result = await NeuroDocs.read(file);
-                        if(file.type.startsWith('image/')) {
-                            this.data.uploads.push({ type: 'img', content: result.content, name: result.name });
-                        } else {
-                            this.data.uploads.push({ type: 'doc', content: result.content, name: result.name });
-                        }
-                    } catch(e) {
-                        alert(`Error reading ${file.name}`);
-                    }
-                }
-                
-                input.value = ''; // Reset input
-                this.renderPreviewDock();
-            },
-
-            removeUpload(index) {
-                this.data.uploads.splice(index, 1);
-                this.renderPreviewDock();
-            },
-
-            renderPreviewDock() {
-                const dock = document.getElementById('previewDock');
-                const label = document.getElementById('fileCountLabel');
-                
-                if(this.data.uploads.length === 0) {
-                    dock.classList.add('hidden');
-                    label.innerText = "0 files";
-                    return;
-                }
-
-                dock.classList.remove('hidden');
-                label.innerText = `${this.data.uploads.length} file(s)`;
-                dock.innerHTML = '';
-
-                this.data.uploads.forEach((item, idx) => {
-                    const div = document.createElement('div');
-                    div.className = "relative group attachment-item shrink-0";
+            // --- CHAT MODULE ---
+            chat: {
+                new(render = true) {
+                    const chat = { id: Date.now(), title: 'New Chat', messages: [] };
+                    app.data.chats.unshift(chat);
+                    if(render) this.load(chat.id);
+                    app.ui.renderHistory();
+                    app.saveStorage();
+                },
+                load(id) {
+                    app.data.activeId = id;
+                    const chat = app.data.chats.find(c => c.id == id);
+                    const container = document.getElementById('chatContainer');
                     
-                    let inner = '';
-                    if(item.type === 'img') {
-                        inner = `<img src="${item.content}" class="w-16 h-16 rounded-lg object-cover border border-gray-300 dark:border-gray-700">`;
-                    } else {
-                        inner = `
-                            <div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-[10px] text-center p-1">
-                                <i class="fa-solid fa-file-lines text-blue-500 text-lg mb-1"></i>
-                                <span class="truncate w-full">${item.name}</span>
-                            </div>
-                        `;
+                    // Reset View
+                    container.innerHTML = `<div id="welcome" class="${(!chat || chat.messages.length===0)?'flex':'hidden'} h-full flex-col items-center justify-center text-center"><h1 class="font-bold text-2xl">Ready?</h1></div>`;
+                    
+                    if(chat) chat.messages.forEach(m => this.append(m));
+                    app.ui.renderHistory();
+                },
+                append(msg) {
+                    const container = document.getElementById('chatContainer');
+                    const div = document.createElement('div');
+                    div.className = `w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
+                    
+                    let attachHTML = '';
+                    if(msg.attachments && msg.attachments.length) {
+                         attachHTML = `<div class="flex gap-2 mb-2 flex-wrap justify-end">` + 
+                            msg.attachments.map(u => `<img src="${u}" class="w-24 h-24 rounded-lg object-cover border border-gray-700">`).join('') + 
+                            `</div>`;
                     }
 
+                    const content = msg.role === 'user' ? msg.content : DOMPurify.sanitize(marked.parse(msg.content));
+                    
                     div.innerHTML = `
-                        ${inner}
-                        <button onclick="app.removeUpload(${idx})" class="delete-btn absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 transition-all shadow-md transform scale-75 group-hover:scale-100 group-hover:opacity-100">
-                            <i class="fa-solid fa-times"></i>
-                        </button>
-                    `;
-                    dock.appendChild(div);
-                });
-            },
-
-            // --- CHAT LOGIC ---
-            newChat(render = true) {
-                const chat = { id: Date.now(), title: 'New Conversation', messages: [] };
-                this.data.chats.unshift(chat);
-                if(render) this.loadChat(chat.id);
-                this.renderHistory();
-                this.save();
-            },
-
-            loadChat(id) {
-                this.data.activeId = id;
-                const chat = this.data.chats.find(c => c.id == id);
-                const container = document.getElementById('chatContainer');
-                
-                // Keep welcome if empty
-                if(!chat || chat.messages.length === 0) {
-                    document.getElementById('welcome').style.display = 'flex';
-                    Array.from(container.children).forEach(c => { if(c.id !== 'welcome') c.remove(); });
-                } else {
-                    document.getElementById('welcome').style.display = 'none';
-                    container.innerHTML = `<div id="welcome" class="hidden"></div>`;
-                    chat.messages.forEach(m => this.appendMessage(m));
-                }
-                this.renderHistory();
-            },
-
-            renderHistory() {
-                const list = document.getElementById('chatList');
-                if(!list) return;
-                list.innerHTML = '';
-                this.data.chats.forEach(c => {
-                    const div = document.createElement('div');
-                    const active = c.id == this.data.activeId;
-                    div.className = `p-3 rounded-lg cursor-pointer text-sm truncate transition flex items-center gap-3 ${active ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`;
-                    div.innerHTML = `<i class="fa-regular fa-message"></i> ${c.title}`;
-                    div.onclick = () => this.loadChat(c.id);
-                    list.appendChild(div);
-                });
-            },
-
-            appendMessage(msg, isStream = false) {
-                const container = document.getElementById('chatContainer');
-                let div = isStream ? document.getElementById('streamingMsg') : null;
-                
-                if(!div) {
-                    div = document.createElement('div');
-                    if(isStream) div.id = 'streamingMsg';
-                    div.className = `w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`;
-                    container.appendChild(div);
-                }
-
-                // Render Content
-                let contentHTML = '';
-                
-                // 1. Render Attachments (Images)
-                if(msg.attachments && msg.attachments.length) {
-                    contentHTML += `<div class="flex gap-2 mb-2 flex-wrap ${msg.role === 'user' ? 'justify-end' : 'justify-start'}">`;
-                    msg.attachments.forEach(url => {
-                         contentHTML += `<img src="${url}" class="max-w-[150px] max-h-[150px] rounded-lg border border-gray-200 dark:border-gray-700 object-cover">`;
-                    });
-                    contentHTML += `</div>`;
-                }
-
-                // 2. Render Text
-                const bubbleClass = msg.role === 'user' 
-                    ? 'msg-user px-5 py-3 text-sm max-w-full text-gray-800 dark:text-gray-100' 
-                    : 'msg-ai prose dark:prose-invert text-sm max-w-none';
-                
-                const parsedText = msg.role === 'user' ? msg.content : DOMPurify.sanitize(marked.parse(msg.content));
-                
-                div.innerHTML = `
-                    <div class="max-w-[90%] md:max-w-[80%] ${msg.role === 'user' ? 'ml-auto' : ''}">
-                        ${contentHTML}
-                        <div class="${bubbleClass}">
-                            ${parsedText}
+                        <div class="max-w-[85%]">
+                            ${attachHTML}
+                            <div class="${msg.role === 'user' ? 'bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2' : 'prose dark:prose-invert'}">
+                                ${content}
+                            </div>
                         </div>
-                    </div>
-                `;
-
-                // Highlight
-                if(msg.role !== 'user') {
-                    div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-                }
-
-                container.scrollTop = container.scrollHeight;
-            },
-
-            async send() {
-                const input = document.getElementById('userInput');
-                const text = input.value.trim();
-                const uploads = this.data.uploads;
-
-                if(!text && uploads.length === 0) return;
-                if(!this.data.settings.apiKey) { this.toggleSettings(); return; }
-
-                // Reset UI
-                input.value = '';
-                input.style.height = 'auto';
-                this.data.uploads = []; // clear staging
-                this.renderPreviewDock();
-                document.getElementById('welcome').style.display = 'none';
-
-                // Process Uploads
-                const images = uploads.filter(u => u.type === 'img').map(u => u.content);
-                const docs = uploads.filter(u => u.type === 'doc');
-                
-                // Create Context String from Docs
-                let contextText = text;
-                if(docs.length > 0) {
-                    contextText += "\n\n--- ATTACHED DOCUMENTS ---\n";
-                    docs.forEach(d => {
-                        contextText += `[File: ${d.name}]\n${d.content}\n\n`;
-                    });
-                }
-
-                // 1. Save User Message
-                const chat = this.data.chats.find(c => c.id == this.data.activeId);
-                const userMsg = { role: 'user', content: contextText, attachments: images };
-                chat.messages.push(userMsg);
-                
-                // Update Title
-                if(chat.messages.length === 1) chat.title = text.slice(0, 25) || "Analysis";
-                
-                this.save();
-                this.appendMessage({ ...userMsg, content: text }); // Show clean text in UI, send context to AI
-
-                // 2. Prepare API Payload
-                const apiMessages = chat.messages.map(m => {
-                    // If message has images, format for Vision API
-                    if(m.attachments && m.attachments.length) {
-                        return {
-                            role: m.role,
-                            content: [
-                                { type: "text", text: m.content },
-                                ...m.attachments.map(url => ({ type: "image_url", image_url: { url } }))
-                            ]
-                        };
-                    }
-                    return { role: m.role, content: m.content };
-                });
-
-                // Add System Prompt
-                apiMessages.unshift({ role: "system", content: this.data.settings.sysPrompt });
-
-                // 3. Stream Request
-                const model = this.data.webMode ? 'perplexity/sonar' : this.data.settings.model;
-
-                try {
-                    // Create Placeholder
-                    this.appendMessage({ role: 'assistant', content: '<span class="animate-pulse">●</span>' }, true);
-
-                    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${this.data.settings.apiKey}`,
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": window.location.href,
-                        },
-                        body: JSON.stringify({ model, messages: apiMessages, stream: true })
-                    });
-
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let fullText = "";
-
-                    while(true) {
-                        const { done, value } = await reader.read();
-                        if(done) break;
-                        const chunk = decoder.decode(value);
-                        const lines = chunk.split('\n');
-                        for(const line of lines) {
-                            if(line.startsWith('data: ') && line !== 'data: [DONE]') {
-                                try {
-                                    const json = JSON.parse(line.slice(6));
-                                    const delta = json.choices[0]?.delta?.content || "";
-                                    fullText += delta;
-                                    this.appendMessage({ role: 'assistant', content: fullText }, true);
-                                } catch(e) {}
-                            }
-                        }
-                    }
-
-                    // Finalize
-                    document.getElementById('streamingMsg').removeAttribute('id');
-                    chat.messages.push({ role: 'assistant', content: fullText });
-                    this.save();
-                    this.renderHistory();
+                    `;
                     
-                    // Canvas Check
-                    const htmlMatch = fullText.match(/```html([\s\S]*?)```/);
-                    if(htmlMatch) {
-                        document.getElementById('canvasFrame').srcdoc = htmlMatch[1];
-                        document.getElementById('canvasPlaceholder').style.display = 'none';
-                        this.toggleCanvas(true);
-                    }
+                    if(msg.role !== 'user') div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                },
+                async send() {
+                    const input = document.getElementById('userInput');
+                    const text = input.value.trim();
+                    const uploads = app.data.uploads;
+                    
+                    if(!text && uploads.length === 0) return;
+                    if(!app.data.settings.apiKey) { app.ui.toggleSettings(); return; }
 
-                } catch(e) {
-                    this.appendMessage({ role: 'assistant', content: `**Error:** ${e.message}` });
+                    input.value = '';
+                    app.data.uploads = [];
+                    app.ui.renderDock();
+                    document.getElementById('welcome').classList.add('hidden');
+
+                    const chat = app.data.chats.find(c => c.id == app.data.activeId);
+                    
+                    // Handle Images
+                    const imgUrls = uploads.filter(u => u.type.startsWith('image')).map(u => u.content);
+                    
+                    const userMsg = { role: 'user', content: text, attachments: imgUrls };
+                    chat.messages.push(userMsg);
+                    if(chat.messages.length === 1) chat.title = text.slice(0,20) || "Conversation";
+                    
+                    this.append(userMsg);
+                    app.saveStorage();
+
+                    // API Call
+                    const payload = [{ role: 'system', content: app.data.settings.sysPrompt }];
+                    // Add history + current
+                    chat.messages.forEach(m => {
+                         if(m.attachments && m.attachments.length) {
+                             payload.push({ role: m.role, content: [
+                                 { type: 'text', text: m.content },
+                                 ...m.attachments.map(u => ({ type: 'image_url', image_url: { url: u } }))
+                             ]});
+                         } else {
+                             payload.push({ role: m.role, content: m.content });
+                         }
+                    });
+
+                    try {
+                        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                            method: "POST",
+                            headers: { "Authorization": `Bearer ${app.data.settings.apiKey}`, "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                model: app.data.webMode ? 'perplexity/sonar' : app.data.settings.model,
+                                messages: payload
+                            })
+                        });
+                        const json = await res.json();
+                        const aiText = json.choices[0].message.content;
+                        
+                        const aiMsg = { role: 'assistant', content: aiText };
+                        chat.messages.push(aiMsg);
+                        this.append(aiMsg);
+                        app.saveStorage();
+                        
+                        // Check Canvas
+                        if(aiText.includes('```html')) {
+                             const code = aiText.match(/```html([\s\S]*?)```/)[1];
+                             document.getElementById('canvasFrame').srcdoc = code;
+                             app.ui.toggleCanvas(true);
+                        }
+
+                    } catch(e) { alert("Error: " + e.message); }
+                },
+                toggleWeb() {
+                    app.data.webMode = !app.data.webMode;
+                    document.getElementById('webBtn').classList.toggle('text-green-500');
                 }
             },
 
-            // --- UTILS ---
-            toggleTheme() {
-                this.data.settings.theme = this.data.settings.theme === 'dark' ? 'light' : 'dark';
-                this.applyTheme();
-                this.save();
-            },
-            applyTheme() {
-                const html = document.documentElement;
-                if(this.data.settings.theme === 'dark') {
-                    html.classList.add('dark');
-                    document.getElementById('themeIcon').className = 'fa-solid fa-sun';
-                } else {
-                    html.classList.remove('dark');
-                    document.getElementById('themeIcon').className = 'fa-solid fa-moon';
+            // --- FILE HANDLER ---
+            files: {
+                handle(input) {
+                    Array.from(input.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            app.data.uploads.push({ type: file.type, content: e.target.result, name: file.name });
+                            app.ui.renderDock();
+                        };
+                        reader.readAsDataURL(file);
+                    });
                 }
             },
-            toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); },
-            saveSettings() {
-                this.data.settings.apiKey = document.getElementById('apiKeyInput').value.trim();
-                this.data.settings.model = document.getElementById('modelInput').value.trim();
-                this.data.settings.sysPrompt = document.getElementById('sysPromptInput').value;
-                this.save();
-                this.toggleSettings();
-                document.getElementById('modelLabel').innerText = this.data.settings.model.split('/')[1] || 'DeepSeek';
-            },
-            toggleWeb() {
-                this.data.webMode = !this.data.webMode;
-                const btn = document.getElementById('webBtn');
-                if(this.data.webMode) {
-                    btn.classList.add('text-green-500', 'bg-green-100', 'dark:bg-green-900/20');
-                    document.getElementById('modelLabel').innerText = "Web Search Active";
-                } else {
-                    btn.classList.remove('text-green-500', 'bg-green-100', 'dark:bg-green-900/20');
-                    document.getElementById('modelLabel').innerText = this.data.settings.model.split('/')[1];
+
+            // --- UI HELPERS ---
+            ui: {
+                toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); },
+                saveSettings() {
+                    app.data.settings.apiKey = document.getElementById('apiKeyInput').value;
+                    app.data.settings.model = document.getElementById('modelInput').value;
+                    app.data.settings.sysPrompt = document.getElementById('sysPromptInput').value;
+                    app.saveStorage();
+                    this.toggleSettings();
+                },
+                toggleTheme() {
+                    app.data.settings.theme = app.data.settings.theme === 'dark' ? 'light' : 'dark';
+                    this.applyTheme();
+                    app.saveStorage();
+                },
+                applyTheme() {
+                    if(app.data.settings.theme === 'dark') document.documentElement.classList.add('dark');
+                    else document.documentElement.classList.remove('dark');
+                },
+                renderHistory() {
+                    const list = document.getElementById('chatList');
+                    list.innerHTML = '';
+                    app.data.chats.forEach(c => {
+                        const div = document.createElement('div');
+                        div.className = `p-2 rounded text-sm cursor-pointer truncate ${c.id === app.data.activeId ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`;
+                        div.innerText = c.title;
+                        div.onclick = () => app.chat.load(c.id);
+                        list.appendChild(div);
+                    });
+                },
+                renderDock() {
+                    const dock = document.getElementById('previewDock');
+                    dock.classList.toggle('hidden', app.data.uploads.length === 0);
+                    dock.innerHTML = app.data.uploads.map(u => 
+                        u.type.startsWith('image') 
+                        ? `<img src="${u.content}" class="w-12 h-12 rounded object-cover border border-gray-600">`
+                        : `<div class="w-12 h-12 rounded bg-gray-800 flex items-center justify-center text-[8px] text-center border border-gray-600 overflow-hidden">${u.name}</div>`
+                    ).join('');
+                },
+                toggleCanvas(show) {
+                    const p = document.getElementById('canvasPanel');
+                    p.parentElement.classList.toggle('canvas-open', show);
                 }
-            },
-            toggleCanvas(show) {
-                const panel = document.getElementById('canvasPanel');
-                if(show) {
-                    panel.parentElement.classList.add('canvas-open');
-                } else {
-                    panel.parentElement.classList.remove('canvas-open');
-                }
-            },
-            downloadCanvas() {
-                const blob = new Blob([document.getElementById('canvasFrame').srcdoc], {type:'text/html'});
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'neurova_canvas.html';
-                a.click();
             }
         };
 
-        window.onload = () => app.init();
+        // Start Auth Listener
+        window.onload = () => app.auth.init();
     </script>
 </body>
 </html>
