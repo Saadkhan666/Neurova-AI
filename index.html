@@ -3,935 +3,501 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neurova OS | Multimodal AI Workspace</title>
+    <title>Neurova AI | Design Restored</title>
     
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        gray: { 750: '#2d3748', 850: '#1a202c', 900: '#111827', 950: '#0b0f19' },
-                        primary: { 500: '#3b82f6', 600: '#2563eb' },
-                        accent: { 500: '#8b5cf6' }
+                        gray: { 850: '#1a1d21', 900: '#111316', 950: '#0b0c0e' },
+                        blue: { 600: '#2563eb', 700: '#1d4ed8' }
                     },
-                    animation: {
-                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'spin-slow': 'spin 3s linear infinite',
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
     </script>
     
-    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js](https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js)"></script>
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css](https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css)">
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js](https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js)"></script>
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* CORE STYLES */
-        :root { --sidebar-width: 280px; --canvas-width: 400px; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
-        
+        /* Base Reset */
         body { font-family: 'Inter', system-ui, sans-serif; overflow: hidden; }
         
-        /* MARKDOWN OVERRIDES */
-        .prose pre { background: #1e1e1e !important; border-radius: 0.5rem; border: 1px solid #333; }
-        .prose code { color: #ef4444; background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px; font-size: 0.9em; }
-        .dark .prose code { color: #fca5a5; background: rgba(255,255,255,0.1); }
-        .prose p { margin-bottom: 0.8rem; line-height: 1.6; }
-        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.8rem; }
+        /* Smooth Scrolling */
+        .scroll-smooth { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #374151; }
         
-        /* LAYOUT UTILS */
-        .mobile-height { height: 100dvh; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-        .dark .glass { background: rgba(17, 24, 39, 0.7); }
+        /* Message Styling */
+        .prose pre { background: #0d1117 !important; border-radius: 8px; padding: 12px; border: 1px solid #30363d; }
+        .msg-user { background-color: #f3f4f6; border-radius: 20px 20px 4px 20px; }
+        .dark .msg-user { background-color: #1f2937; color: #f3f4f6; }
+        .msg-ai { background: transparent; width: 100%; }
         
-        /* ANIMATIONS */
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        
-        /* UI COMPONENTS */
-        .msg-user { background: #eff6ff; border-radius: 1.2rem 1.2rem 0 1.2rem; }
-        .dark .msg-user { background: #1e293b; }
-        .typing-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 2px; animation: pulse 1s infinite; }
-        
-        /* HOLO-CANVAS TRANSITIONS */
-        #rightPanel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .canvas-open #rightPanel { transform: translateX(0); }
-        .canvas-closed #rightPanel { transform: translateX(100%); }
+        /* Holo-Canvas Slide Animation */
+        #canvasPanel { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .canvas-open #canvasPanel { transform: translateX(0); }
+        .canvas-closed #canvasPanel { transform: translateX(100%); }
+
+        /* Loader Safety */
+        #loader { transition: opacity 0.5s ease; pointer-events: none; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 mobile-height transition-colors duration-300">
+<body class="bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 h-full flex transition-colors duration-300">
 
-    <div id="loading" class="fixed inset-0 bg-white dark:bg-gray-950 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="relative">
-            <div class="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full animate-pulse"></div>
-            <i class="fa-solid fa-microchip fa-3x text-blue-600 dark:text-blue-400 relative z-10 animate-float"></i>
-        </div>
-        <h1 class="mt-6 text-2xl font-bold tracking-tight">Neurova OS</h1>
-        <p class="text-gray-400 text-sm mt-2">Initializing Neural Interface...</p>
-        <button onclick="forceStart()" class="mt-8 text-xs text-gray-500 underline">Force Boot</button>
+    <div id="loader" class="fixed inset-0 bg-white dark:bg-gray-950 z-[100] flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-sm font-medium animate-pulse">Starting Neurova...</p>
+        <button onclick="document.getElementById('loader').style.opacity='0'; setTimeout(()=>document.getElementById('loader').remove(),500)" class="mt-6 text-xs text-gray-400 underline cursor-pointer">Stuck? Click to Skip</button>
     </div>
 
-    <div id="app" class="flex h-full w-full opacity-0 transition-opacity duration-700 relative overflow-hidden">
+    <aside id="sidebar" class="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col hidden md:flex shrink-0">
+        <div class="p-4 h-16 flex items-center gap-2 font-bold text-lg border-b border-gray-200 dark:border-gray-800">
+            <span class="text-blue-600"><i class="fa-solid fa-brain"></i></span> Neurova
+        </div>
         
-        <aside id="sidebarLeft" class="fixed md:static inset-y-0 left-0 w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col shadow-2xl md:shadow-none">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
-                <div class="flex items-center gap-2 font-bold text-lg tracking-tight">
-                    <span class="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30"><i class="fa-solid fa-brain"></i></span>
-                    Neurova OS
-                </div>
-                <button onclick="app.ui.toggleLeftSidebar()" class="md:hidden text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+        <div class="p-3">
+            <button onclick="app.newChat()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 text-sm font-medium transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i> New Chat
+            </button>
+        </div>
+
+        <div id="chatList" class="flex-1 overflow-y-auto px-2 space-y-1">
             </div>
 
-            <div class="p-3 space-y-2">
-                <button onclick="app.chat.new()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-medium shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus"></i> New Session
-                </button>
-                <div class="relative">
-                    <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
-                    <input type="text" placeholder="Filter chats..." class="w-full bg-gray-100 dark:bg-gray-800 text-sm py-2 pl-8 rounded-lg border-none focus:ring-2 focus:ring-blue-500/50" onkeyup="app.ui.filterChats(this.value)">
+        <div class="p-4 border-t border-gray-200 dark:border-gray-800 text-xs text-gray-500 flex justify-between items-center">
+            <button onclick="app.toggleSettings()" class="hover:text-blue-500"><i class="fa-solid fa-cog"></i> Settings</button>
+            <button onclick="app.toggleTheme()" class="hover:text-blue-500"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative min-w-0">
+        
+        <header class="md:hidden h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur sticky top-0 z-20">
+            <div class="font-bold flex items-center gap-2">
+                <i class="fa-solid fa-brain text-blue-600"></i> Neurova
+            </div>
+            <button onclick="app.toggleMobileMenu()" class="text-gray-500"><i class="fa-solid fa-bars"></i></button>
+        </header>
+
+        <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+            <div id="welcome" class="h-full flex flex-col items-center justify-center text-center opacity-100 transition-opacity duration-500">
+                <div class="w-16 h-16 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl text-white text-2xl">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </div>
+                <h1 class="text-2xl font-bold mb-2">How can I help you?</h1>
+                <p class="text-gray-400 max-w-sm text-sm">I can write code, analyze images, and search the web.</p>
+            </div>
             </div>
 
-            <div id="chatList" class="flex-1 overflow-y-auto px-2 space-y-1 py-2">
-                </div>
+        <div class="p-4 bg-white dark:bg-gray-950 z-20">
+            <div class="max-w-3xl mx-auto relative group">
+                <div id="previewArea" class="hidden absolute -top-16 left-0 flex gap-2 p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg"></div>
 
-            <div class="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-                <div onclick="app.ui.toggleSettings('memory')" class="flex items-center gap-3 cursor-pointer group">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold shadow-lg">
-                        <i class="fa-solid fa-user-astronaut"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold truncate group-hover:text-blue-500 transition">User Profile</p>
-                        <p class="text-xs text-gray-500 truncate">Deep Memory Active</p>
-                    </div>
-                    <i class="fa-solid fa-cog text-gray-400 group-hover:rotate-90 transition duration-500"></i>
-                </div>
-            </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col relative w-full min-w-0 bg-white dark:bg-gray-950">
-            
-            <header class="h-16 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 z-20 glass sticky top-0">
-                <div class="flex items-center gap-3">
-                    <button onclick="app.ui.toggleLeftSidebar()" class="md:hidden text-gray-500"><i class="fa-solid fa-bars"></i></button>
-                    
-                    <div class="flex flex-col">
-                        <span id="modelBadge" class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">...</span>
-                        <div class="flex items-center gap-1 text-[10px] text-gray-400">
-                            <i class="fa-solid fa-circle text-green-500 text-[6px]"></i> Online
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button id="webSyncBtn" onclick="app.chat.toggleWeb()" class="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" title="Web Search Mode">
+                <textarea id="userInput" rows="1" class="w-full bg-gray-100 dark:bg-gray-900 border-0 rounded-2xl pl-4 pr-32 py-4 focus:ring-2 focus:ring-blue-500 resize-none shadow-sm text-base" placeholder="Ask anything..."></textarea>
+                
+                <div class="absolute right-2 bottom-2.5 flex items-center gap-1">
+                    <button id="webBtn" onclick="app.toggleWeb()" class="p-2 text-gray-400 hover:text-green-500 rounded-full transition" title="Search Web">
                         <i class="fa-solid fa-globe"></i>
                     </button>
-                    <button id="headsetBtn" onclick="app.voice.toggleConversationMode()" class="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" title="Conversation Mode">
-                        <i class="fa-solid fa-headset"></i>
+                    <button onclick="document.getElementById('fileUpload').click()" class="p-2 text-gray-400 hover:text-blue-500 rounded-full transition" title="Upload Image">
+                        <i class="fa-solid fa-paperclip"></i>
                     </button>
-                    <button onclick="app.ui.toggleRightPanel()" class="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden" title="Toggle Canvas">
-                        <i class="fa-solid fa-columns"></i>
-                    </button>
-                    <button onclick="app.ui.toggleTheme()" class="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
-                        <i id="themeIcon" class="fa-solid fa-moon"></i>
-                    </button>
-                </div>
-            </header>
-
-            <div id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth">
-                <div id="welcome" class="h-full flex flex-col items-center justify-center text-center opacity-50 select-none">
-                    <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-6 animate-float">
-                        <i class="fa-solid fa-cube text-4xl text-blue-500"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold">Neurova OS</h2>
-                    <p class="text-sm mt-2">Multimodal • Canvas • Deep Memory</p>
-                    <div class="mt-8 flex gap-2 text-xs">
-                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">/help</span>
-                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">/code</span>
-                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">/reset</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 z-30">
-                <div id="imagePreview" class="hidden flex gap-2 mb-2 overflow-x-auto pb-2"></div>
-                
-                <div class="max-w-4xl mx-auto relative group">
-                    <textarea id="input" rows="1" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-28 py-4 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none shadow-sm transition-all" placeholder="Type /help for commands..."></textarea>
+                    <input type="file" id="fileUpload" class="hidden" accept="image/*" onchange="app.handleImage(this)">
                     
-                    <div class="absolute left-3 bottom-3 flex gap-1">
-                        <button onclick="document.getElementById('fileInput').click()" class="p-2 text-gray-400 hover:text-blue-500 transition" title="Upload Image">
-                            <i class="fa-solid fa-paperclip"></i>
-                        </button>
-                        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="app.vision.handleFile(this)">
-                    </div>
-
-                    <div class="absolute right-3 bottom-3 flex gap-2 items-center">
-                        <span id="charCount" class="text-[10px] text-gray-400 hidden group-focus-within:inline">0</span>
-                        <button id="micBtn" onclick="app.voice.toggleMic()" class="p-2 text-gray-400 hover:text-red-500 transition rounded-full hover:bg-gray-200 dark:hover:bg-gray-800">
-                            <i class="fa-solid fa-microphone"></i>
-                        </button>
-                        <button id="sendBtn" onclick="app.chat.send()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-xl w-10 h-10 flex items-center justify-center shadow-lg shadow-blue-600/20 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100">
-                            <i class="fa-solid fa-arrow-up"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="text-center mt-2 text-[10px] text-gray-400 flex justify-center gap-4">
-                    <span id="statusIndicator">Ready</span>
-                    <span class="opacity-50">|</span>
-                    <span id="tokenCount">0 tokens</span>
+                    <button onclick="app.send()" id="sendBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded-xl w-9 h-9 flex items-center justify-center transition disabled:opacity-50">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
                 </div>
             </div>
-        </main>
-
-        <aside id="rightPanel" class="fixed inset-y-0 right-0 w-full md:w-[450px] bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 transform translate-x-full z-50 transition-transform shadow-2xl flex flex-col">
-            
-            <div class="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-                <button onclick="app.ui.switchTab('canvas')" id="tabCanvas" class="flex-1 py-3 text-sm font-medium border-b-2 border-blue-500 text-blue-600 dark:text-blue-400">
-                    <i class="fa-solid fa-code mr-1"></i> Holo-Canvas
-                </button>
-                <button onclick="app.ui.switchTab('state')" id="tabState" class="flex-1 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                    <i class="fa-solid fa-database mr-1"></i> JSON State
-                </button>
-                <button onclick="app.ui.toggleRightPanel()" class="px-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-times"></i></button>
+            <div class="text-center mt-2 text-[10px] text-gray-400">
+                <span id="modelLabel">Using: DeepSeek R1 (Free)</span>
             </div>
+        </div>
+    </main>
 
-            <div id="viewCanvas" class="flex-1 flex flex-col h-full bg-white dark:bg-gray-950 relative">
-                <div class="p-2 bg-gray-100 dark:bg-gray-800 flex justify-between items-center text-xs">
-                    <span class="font-mono text-gray-500">preview.html</span>
-                    <div class="flex gap-2">
-                        <button onclick="app.canvas.refresh()" class="hover:text-blue-500"><i class="fa-solid fa-rotate-right"></i></button>
-                        <button onclick="app.canvas.download()" class="hover:text-green-500"><i class="fa-solid fa-download"></i></button>
-                    </div>
+    <aside id="canvasPanel" class="fixed inset-y-0 right-0 w-full md:w-[45%] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl z-40 transform translate-x-full flex flex-col">
+        <div class="h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-gray-50 dark:bg-gray-900">
+            <span class="font-bold text-sm text-blue-600 uppercase tracking-wider"><i class="fa-solid fa-code"></i> Holo-Canvas</span>
+            <div class="flex gap-2">
+                <button onclick="app.downloadCanvas()" class="p-2 text-gray-500 hover:text-green-500"><i class="fa-solid fa-download"></i></button>
+                <button onclick="app.toggleCanvas(false)" class="p-2 text-gray-500 hover:text-red-500"><i class="fa-solid fa-times"></i></button>
+            </div>
+        </div>
+        <div class="flex-1 bg-gray-100 dark:bg-black relative">
+            <iframe id="canvasFrame" class="w-full h-full border-none"></iframe>
+            <div id="canvasPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                <i class="fa-solid fa-cube fa-2x mb-2"></i>
+                <p class="text-sm">Generate code to see preview</p>
+            </div>
+        </div>
+    </aside>
+
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6 transform scale-95 transition-transform">
+            <h2 class="text-xl font-bold mb-4">Configuration</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">OpenRouter API Key</label>
+                    <input type="password" id="apiKeyInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" placeholder="sk-or-...">
                 </div>
-                <iframe id="previewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
-                <div id="canvasPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-400 text-sm">
-                    Waiting for code execution...
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Model Name</label>
+                    <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg px-3 py-2 text-sm" value="deepseek/deepseek-r1:free">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">System Instructions</label>
+                    <textarea id="sysPromptInput" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg px-3 py-2 text-sm h-24" placeholder="You are a helpful assistant..."></textarea>
                 </div>
             </div>
-
-            <div id="viewState" class="flex-1 hidden p-4 overflow-y-auto font-mono text-xs">
-                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                    <h3 class="text-gray-500 mb-2 uppercase tracking-wide text-[10px]">Active Variables</h3>
-                    <pre id="jsonStateDisplay" class="text-green-600 dark:text-green-400 whitespace-pre-wrap">{ "status": "idle" }</pre>
-                </div>
-                <p class="mt-4 text-gray-400 italic">
-                    Tip: Ask Neurova to "store variable X" to see it here.
-                </p>
-            </div>
-        </aside>
-
-        <div id="overlay" onclick="app.ui.closeOverlays()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden transition-opacity"></div>
-
-    </div>
-
-    <div id="settingsModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="app.ui.toggleSettings()"></div>
-        <div class="relative bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-float">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
-                <h3 class="font-bold">System Configuration</h3>
-                <button onclick="app.ui.toggleSettings()"><i class="fa-solid fa-times"></i></button>
-            </div>
-            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-gray-500">OpenRouter API Key</label>
-                    <input type="password" id="apiKey" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" placeholder="sk-or-...">
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold uppercase text-gray-500">Chat Model</label>
-                        <input type="text" id="modelChat" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm" value="deepseek/deepseek-r1:free">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold uppercase text-gray-500">Web/Search Model</label>
-                        <input type="text" id="modelWeb" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm" value="perplexity/sonar">
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase text-gray-500">Deep Memory (User Profile)</label>
-                    <textarea id="sysPrompt" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg px-4 py-2 h-32 text-sm focus:ring-2 focus:ring-purple-500" placeholder="I am a Full Stack Developer. I prefer concise answers..."></textarea>
-                    <p class="text-[10px] text-gray-400">This context is injected into every conversation invisibly.</p>
-                </div>
-
-            </div>
-            <div class="p-4 bg-gray-50 dark:bg-gray-950 flex justify-end gap-2">
-                <button onclick="app.storage.clear()" class="px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm">Factory Reset</button>
-                <button onclick="app.ui.saveSettings()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-lg">Save System</button>
+            <div class="mt-6 flex justify-end gap-2">
+                <button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="px-4 py-2 text-gray-500">Cancel</button>
+                <button onclick="app.saveSettings()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Save</button>
             </div>
         </div>
     </div>
 
     <script>
-        /**
-         * NEUROVA OS - Monolithic Architecture
-         * Modules: App, Storage, UI, Chat, Vision, Voice, Canvas, Commands
-         */
+        // --- SAFE INIT ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').remove(), 500);
+            }, 800);
+            app.init();
+        });
 
         const app = {
-            state: {
+            data: {
                 chats: [],
-                activeChat: null,
+                activeId: null,
                 settings: {
                     apiKey: '',
-                    modelChat: 'deepseek/deepseek-r1:free',
-                    modelWeb: 'perplexity/sonar',
-                    systemPrompt: 'You are Neurova, an advanced AI OS. If asked to write HTML/CSS/JS, always include the full code. If asked to update state, output a JSON block tagged with ```json-state.',
+                    model: 'deepseek/deepseek-r1:free',
+                    sysPrompt: 'You are Neurova. If asked to write HTML/CSS, provide the full code.',
                     theme: 'dark'
                 },
-                variables: {}, // JSON State
-                isWebMode: false,
-                isVoiceMode: false,
-                isGenerating: false,
-                recognition: null,
-                synthesis: window.speechSynthesis,
-                attachments: [] // Base64 images
+                webMode: false,
+                attachments: [] // Base64
             },
 
-            // --- BOOTSTRAP ---
             init() {
                 try {
-                    this.storage.load();
-                    this.ui.applyTheme();
-                    this.voice.init();
+                    // Load LocalStorage
+                    const saved = localStorage.getItem('neurova_v3');
+                    if(saved) {
+                        const parsed = JSON.parse(saved);
+                        this.data.chats = parsed.chats || [];
+                        this.data.settings = {...this.data.settings, ...parsed.settings};
+                    }
                     
-                    // Route to last chat or new
-                    if (this.state.chats.length > 0) {
-                        this.chat.load(this.state.chats[0].id);
-                    } else {
-                        this.chat.new(false);
-                    }
-
-                    this.ui.renderChatList();
-                    this.ui.updateModelBadge();
-                    
-                    // Listeners
-                    this.bindEvents();
-
-                    // Remove loader
-                    setTimeout(() => {
-                        document.getElementById('loading').style.opacity = '0';
-                        setTimeout(() => {
-                            document.getElementById('loading').style.display = 'none';
-                            document.getElementById('app').style.opacity = '1';
-                        }, 500);
-                    }, 800);
-
-                } catch (e) {
-                    console.error("Boot failure:", e);
-                    alert("System Corruption Detected. Resetting...");
-                    this.storage.clear();
-                    location.reload();
-                }
-            },
-
-            bindEvents() {
-                // Auto-resize text area
-                const input = document.getElementById('input');
-                input.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-                    document.getElementById('charCount').innerText = this.value.length;
-                    
-                    // Slash Command Preview (Basic)
-                    if(this.value.startsWith('/')) {
-                        this.classList.add('text-blue-500');
-                    } else {
-                        this.classList.remove('text-blue-500');
-                    }
-                });
-
-                // Enter Key
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        this.chat.send();
-                    }
-                });
-            },
-
-            // --- STORAGE MODULE ---
-            storage: {
-                load() {
-                    const data = localStorage.getItem('neurova_os_v1');
-                    if (data) {
-                        const parsed = JSON.parse(data);
-                        app.state.chats = parsed.chats || [];
-                        app.state.settings = { ...app.state.settings, ...parsed.settings };
-                        app.state.variables = parsed.variables || {};
-                    }
-                    // Fill Settings
-                    document.getElementById('apiKey').value = app.state.settings.apiKey;
-                    document.getElementById('modelChat').value = app.state.settings.modelChat;
-                    document.getElementById('modelWeb').value = app.state.settings.modelWeb;
-                    document.getElementById('sysPrompt').value = app.state.settings.systemPrompt;
-                },
-                save() {
-                    const data = {
-                        chats: app.state.chats,
-                        settings: app.state.settings,
-                        variables: app.state.variables
-                    };
-                    localStorage.setItem('neurova_os_v1', JSON.stringify(data));
-                },
-                clear() {
-                    if(confirm("Factory Reset: This will wipe all chats and keys. Continue?")) {
-                        localStorage.removeItem('neurova_os_v1');
-                        location.reload();
-                    }
-                }
-            },
-
-            // --- UI MODULE ---
-            ui: {
-                toggleLeftSidebar() {
-                    const sb = document.getElementById('sidebarLeft');
-                    const ov = document.getElementById('overlay');
-                    sb.classList.toggle('-translate-x-full');
-                    ov.classList.toggle('hidden');
-                },
-                toggleRightPanel(forceOpen = null) {
-                    const p = document.getElementById('rightPanel');
-                    const isClosed = p.classList.contains('translate-x-full');
-                    const shouldOpen = forceOpen !== null ? forceOpen : isClosed;
-                    
-                    if(shouldOpen) {
-                        p.classList.remove('translate-x-full');
-                        document.body.classList.add('canvas-open');
-                    } else {
-                        p.classList.add('translate-x-full');
-                        document.body.classList.remove('canvas-open');
-                    }
-                },
-                toggleSettings(tab = 'general') {
-                    const m = document.getElementById('settingsModal');
-                    m.classList.toggle('hidden');
-                },
-                closeOverlays() {
-                    document.getElementById('sidebarLeft').classList.add('-translate-x-full');
-                    document.getElementById('overlay').classList.add('hidden');
-                },
-                toggleTheme() {
-                    app.state.settings.theme = app.state.settings.theme === 'dark' ? 'light' : 'dark';
+                    // Apply Settings
                     this.applyTheme();
-                    app.storage.save();
-                },
-                applyTheme() {
-                    const html = document.documentElement;
-                    const icon = document.getElementById('themeIcon');
-                    if (app.state.settings.theme === 'dark') {
-                        html.classList.add('dark');
-                        icon.classList.remove('fa-moon');
-                        icon.classList.add('fa-sun');
-                    } else {
-                        html.classList.remove('dark');
-                        icon.classList.remove('fa-sun');
-                        icon.classList.add('fa-moon');
-                    }
-                },
-                saveSettings() {
-                    app.state.settings.apiKey = document.getElementById('apiKey').value.trim();
-                    app.state.settings.modelChat = document.getElementById('modelChat').value.trim();
-                    app.state.settings.modelWeb = document.getElementById('modelWeb').value.trim();
-                    app.state.settings.systemPrompt = document.getElementById('sysPrompt').value;
-                    app.storage.save();
-                    this.toggleSettings();
-                    this.updateModelBadge();
-                    alert("System Configuration Updated");
-                },
-                updateModelBadge() {
-                    const badge = document.getElementById('modelBadge');
-                    if(app.state.isWebMode) {
-                        badge.innerText = "WEB: " + app.state.settings.modelWeb.split('/')[1];
-                        badge.classList.add('text-green-500');
-                    } else {
-                        badge.innerText = app.state.settings.modelChat.split('/')[1] || "Select Model";
-                        badge.classList.remove('text-green-500');
-                    }
-                },
-                renderChatList() {
-                    const list = document.getElementById('chatList');
-                    list.innerHTML = '';
-                    app.state.chats.forEach(chat => {
-                        const active = app.state.activeChat === chat.id;
-                        const div = document.createElement('div');
-                        div.className = `p-3 rounded-xl cursor-pointer transition text-sm flex items-center gap-3 ${active ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'}`;
-                        div.onclick = () => app.chat.load(chat.id);
-                        div.innerHTML = `
-                            <i class="fa-regular fa-message"></i>
-                            <span class="truncate flex-1">${chat.title}</span>
-                            <button onclick="event.stopPropagation(); app.chat.delete('${chat.id}')" class="text-xs opacity-0 group-hover:opacity-100 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
-                        `;
-                        div.classList.add('group');
-                        list.appendChild(div);
+                    document.getElementById('apiKeyInput').value = this.data.settings.apiKey;
+                    document.getElementById('modelInput').value = this.data.settings.model;
+                    document.getElementById('sysPromptInput').value = this.data.settings.sysPrompt;
+                    
+                    // Setup Chat
+                    if(this.data.chats.length === 0) this.newChat(false);
+                    else this.loadChat(this.data.chats[0].id);
+                    
+                    this.renderHistory();
+                    
+                    // Event Listeners
+                    document.getElementById('userInput').addEventListener('keydown', (e) => {
+                        if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); }
                     });
-                },
-                scrollToBottom() {
-                    const m = document.getElementById('messages');
-                    m.scrollTop = m.scrollHeight;
-                },
-                switchTab(tab) {
-                    document.getElementById('viewCanvas').classList.toggle('hidden', tab !== 'canvas');
-                    document.getElementById('viewState').classList.toggle('hidden', tab !== 'state');
-                    document.getElementById('tabCanvas').classList.toggle('border-blue-500', tab === 'canvas');
-                    document.getElementById('tabCanvas').classList.toggle('text-blue-600', tab === 'canvas');
-                    document.getElementById('tabState').classList.toggle('border-blue-500', tab === 'state');
-                    document.getElementById('tabState').classList.toggle('text-blue-600', tab === 'state');
-                },
-                filterChats(query) {
-                    const q = query.toLowerCase();
-                    const items = document.getElementById('chatList').children;
-                    Array.from(items).forEach(item => {
-                        const txt = item.innerText.toLowerCase();
-                        item.style.display = txt.includes(q) ? 'flex' : 'none';
-                    });
+
+                } catch(e) { console.error("Init Error", e); }
+            },
+
+            save() {
+                localStorage.setItem('neurova_v3', JSON.stringify({
+                    chats: this.data.chats,
+                    settings: this.data.settings
+                }));
+            },
+
+            // --- UI ACTIONS ---
+            toggleTheme() {
+                this.data.settings.theme = this.data.settings.theme === 'dark' ? 'light' : 'dark';
+                this.applyTheme();
+                this.save();
+            },
+
+            applyTheme() {
+                const html = document.documentElement;
+                if(this.data.settings.theme === 'dark') {
+                    html.classList.add('dark');
+                    document.getElementById('themeIcon').className = 'fa-solid fa-sun';
+                } else {
+                    html.classList.remove('dark');
+                    document.getElementById('themeIcon').className = 'fa-solid fa-moon';
                 }
             },
 
-            // --- CHAT MODULE ---
-            chat: {
-                new(switchNow = true) {
-                    const chat = {
-                        id: Date.now().toString(),
-                        title: 'New Session ' + new Date().toLocaleTimeString(),
-                        messages: [],
-                        updated: Date.now()
-                    };
-                    app.state.chats.unshift(chat);
-                    app.storage.save();
-                    if(switchNow) this.load(chat.id);
-                    app.ui.renderChatList();
-                },
-                load(id) {
-                    app.state.activeChat = id;
-                    const chat = app.state.chats.find(c => c.id === id);
-                    const container = document.getElementById('messages');
-                    const welcome = document.getElementById('welcome');
-                    
-                    // Clear DOM
-                    Array.from(container.children).forEach(c => {
-                        if(c.id !== 'welcome') c.remove();
-                    });
+            toggleSettings() {
+                document.getElementById('settingsModal').classList.toggle('hidden');
+            },
 
-                    if(!chat || chat.messages.length === 0) {
-                        welcome.style.display = 'flex';
-                    } else {
-                        welcome.style.display = 'none';
-                        chat.messages.forEach(m => this.renderMessage(m));
-                    }
-                    
-                    app.ui.renderChatList();
-                    app.ui.scrollToBottom();
-                    
-                    // Mobile: Close sidebar
-                    if(window.innerWidth < 768) app.ui.closeOverlays();
-                },
-                delete(id) {
-                    if(!confirm("Delete this session?")) return;
-                    app.state.chats = app.state.chats.filter(c => c.id !== id);
-                    app.storage.save();
-                    if(app.state.activeChat === id) this.new();
-                    else app.ui.renderChatList();
-                },
-                toggleWeb() {
-                    app.state.isWebMode = !app.state.isWebMode;
-                    const btn = document.getElementById('webSyncBtn');
-                    if(app.state.isWebMode) {
-                        btn.classList.add('text-green-500', 'bg-green-50', 'dark:bg-green-900/20');
-                    } else {
-                        btn.classList.remove('text-green-500', 'bg-green-50', 'dark:bg-green-900/20');
-                    }
-                    app.ui.updateModelBadge();
-                },
+            saveSettings() {
+                this.data.settings.apiKey = document.getElementById('apiKeyInput').value.trim();
+                this.data.settings.model = document.getElementById('modelInput').value.trim();
+                this.data.settings.sysPrompt = document.getElementById('sysPromptInput').value;
+                this.save();
+                this.toggleSettings();
+                document.getElementById('modelLabel').innerText = `Using: ${this.data.settings.model}`;
+            },
+
+            toggleWeb() {
+                this.data.webMode = !this.data.webMode;
+                const btn = document.getElementById('webBtn');
+                if(this.data.webMode) {
+                    btn.classList.add('text-green-500', 'bg-green-100', 'dark:bg-green-900/20');
+                    document.getElementById('modelLabel').innerText = "Web Search: ON (Perplexity/Sonar)";
+                } else {
+                    btn.className = "p-2 text-gray-400 hover:text-green-500 rounded-full transition";
+                    document.getElementById('modelLabel').innerText = `Using: ${this.data.settings.model}`;
+                }
+            },
+
+            toggleCanvas(show) {
+                const panel = document.getElementById('canvasPanel');
+                if(show) {
+                    panel.parentElement.classList.add('canvas-open');
+                    document.body.classList.add('canvas-open');
+                } else {
+                    panel.parentElement.classList.remove('canvas-open');
+                    document.body.classList.remove('canvas-open');
+                }
+            },
+
+            handleImage(input) {
+                const file = input.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.data.attachments.push(e.target.result);
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = "w-10 h-10 rounded border object-cover";
+                    const area = document.getElementById('previewArea');
+                    area.classList.remove('hidden');
+                    area.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            },
+
+            // --- CHAT LOGIC ---
+            newChat(render = true) {
+                const chat = { id: Date.now(), title: 'New Chat', messages: [] };
+                this.data.chats.unshift(chat);
+                if(render) this.loadChat(chat.id);
+                this.renderHistory();
+                this.save();
+            },
+
+            loadChat(id) {
+                this.data.activeId = id;
+                const chat = this.data.chats.find(c => c.id == id);
+                const container = document.getElementById('chatContainer');
                 
-                async send() {
-                    if(app.state.isGenerating) return;
-                    
-                    const input = document.getElementById('input');
-                    const rawText = input.value.trim();
-                    const attachments = [...app.state.attachments]; // Copy attachs
-                    
-                    // SLASH COMMAND CHECK
-                    if(rawText.startsWith('/')) {
-                        app.commands.execute(rawText);
-                        input.value = '';
-                        return;
+                // Keep welcome only if empty
+                if(!chat || chat.messages.length === 0) {
+                    document.getElementById('welcome').style.opacity = '1';
+                    document.getElementById('welcome').style.display = 'flex';
+                    // Clear other messages
+                    Array.from(container.children).forEach(child => {
+                        if(child.id !== 'welcome') child.remove();
+                    });
+                } else {
+                    document.getElementById('welcome').style.opacity = '0';
+                    document.getElementById('welcome').style.display = 'none';
+                    // Clear and Rebuild
+                    container.innerHTML = `<div id="welcome" class="hidden"></div>`;
+                    chat.messages.forEach(msg => this.appendMessage(msg));
+                }
+                this.renderHistory();
+            },
+
+            renderHistory() {
+                const list = document.getElementById('chatList');
+                if(!list) return;
+                list.innerHTML = '';
+                this.data.chats.forEach(c => {
+                    const div = document.createElement('div');
+                    const active = c.id == this.data.activeId;
+                    div.className = `p-2 rounded cursor-pointer text-sm truncate ${active ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`;
+                    div.innerText = c.title;
+                    div.onclick = () => this.loadChat(c.id);
+                    list.appendChild(div);
+                });
+            },
+
+            appendMessage(msg, isStream = false) {
+                const container = document.getElementById('chatContainer');
+                let div = isStream ? document.getElementById('streamingMsg') : document.createElement('div');
+                
+                if(!div) {
+                    div = document.createElement('div');
+                    if(isStream) div.id = 'streamingMsg';
+                    div.className = `w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`;
+                    container.appendChild(div);
+                }
+
+                // Attachments
+                let imgHTML = '';
+                if(msg.attachments && msg.attachments.length) {
+                    imgHTML = `<div class="flex gap-2 mb-2 justify-end">`;
+                    msg.attachments.forEach(url => imgHTML += `<img src="${url}" class="max-w-[150px] rounded-lg border">`);
+                    imgHTML += `</div>`;
+                }
+
+                const contentClass = msg.role === 'user' ? 'msg-user px-4 py-3 text-sm' : 'msg-ai prose dark:prose-invert text-sm max-w-none';
+                
+                let htmlContent = msg.role === 'user' ? msg.content : DOMPurify.sanitize(marked.parse(msg.content));
+                
+                div.innerHTML = `
+                    <div class="max-w-[90%] md:max-w-[80%] ${msg.role === 'user' ? 'ml-auto' : ''}">
+                        ${imgHTML}
+                        <div class="${contentClass}">
+                            ${htmlContent}
+                        </div>
+                    </div>
+                `;
+
+                // Highlight code
+                if(msg.role !== 'user') {
+                    div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+                }
+
+                container.scrollTop = container.scrollHeight;
+            },
+
+            async send() {
+                const input = document.getElementById('userInput');
+                const text = input.value.trim();
+                const attachments = [...this.data.attachments];
+                
+                if(!text && attachments.length === 0) return;
+                if(!this.data.settings.apiKey) { this.toggleSettings(); return; }
+
+                // Clear UI
+                input.value = '';
+                this.data.attachments = [];
+                document.getElementById('previewArea').innerHTML = '';
+                document.getElementById('previewArea').classList.add('hidden');
+                document.getElementById('welcome').style.display = 'none';
+
+                // Save User Msg
+                const chat = this.data.chats.find(c => c.id == this.data.activeId);
+                const userMsg = { role: 'user', content: text, attachments: attachments };
+                chat.messages.push(userMsg);
+                if(chat.messages.length === 1) chat.title = text.slice(0, 20) || "New Conversation";
+                
+                this.save();
+                this.appendMessage(userMsg);
+
+                // Prepare Stream
+                const msgs = chat.messages.map(m => {
+                    if(m.attachments && m.attachments.length) {
+                        return {
+                            role: m.role,
+                            content: [
+                                {type: "text", text: m.content},
+                                ...m.attachments.map(a => ({type: "image_url", image_url: {url: a}}))
+                            ]
+                        };
                     }
+                    return {role: m.role, content: m.content};
+                });
 
-                    if(!rawText && attachments.length === 0) return;
-                    if(!app.state.settings.apiKey) {
-                        app.ui.toggleSettings();
-                        alert("API Key Missing");
-                        return;
-                    }
+                // Insert System Prompt
+                msgs.unshift({ role: "system", content: this.data.settings.sysPrompt });
 
-                    // Reset UI
-                    input.value = '';
-                    app.state.attachments = [];
-                    document.getElementById('imagePreview').innerHTML = '';
-                    document.getElementById('imagePreview').classList.add('hidden');
-                    input.style.height = 'auto';
-                    app.state.isGenerating = true;
-                    document.getElementById('statusIndicator').innerText = "Processing...";
-                    document.getElementById('statusIndicator').classList.add('animate-pulse');
+                const model = this.data.webMode ? 'perplexity/sonar' : this.data.settings.model;
 
-                    // 1. Add User Message
-                    const userMsg = { 
-                        role: 'user', 
-                        content: rawText,
-                        attachments: attachments // Store explicitly
-                    };
-                    
-                    // Update Local State
-                    const chat = app.state.chats.find(c => c.id === app.state.activeChat);
-                    chat.messages.push(userMsg);
-                    
-                    // Update Title
-                    if(chat.messages.length === 1) {
-                        chat.title = rawText.substring(0, 30) || "Image Analysis";
-                        app.ui.renderChatList();
-                    }
-
-                    this.renderMessage(userMsg);
-                    
-                    // 2. Prepare API Payload
-                    let apiContent = rawText;
-                    
-                    // Vision Payload Structure
-                    if(attachments.length > 0) {
-                        apiContent = [{ type: "text", text: rawText }];
-                        attachments.forEach(url => {
-                            apiContent.push({
-                                type: "image_url",
-                                image_url: { url: url }
-                            });
-                        });
-                    }
-
-                    // System Prompt + JSON State
-                    const systemMsg = {
-                        role: "system",
-                        content: `${app.state.settings.systemPrompt}\n\nCurrent JSON State: ${JSON.stringify(app.state.variables)}`
-                    };
-
-                    const history = chat.messages.map(m => {
-                        // Vision history format
-                        if(m.attachments && m.attachments.length > 0) {
-                            const contentArr = [{ type: "text", text: m.content }];
-                            m.attachments.forEach(u => contentArr.push({ type: "image_url", image_url: { url: u } }));
-                            return { role: m.role, content: contentArr };
-                        }
-                        return { role: m.role, content: m.content };
+                try {
+                    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${this.data.settings.apiKey}`,
+                            "Content-Type": "application/json",
+                            "HTTP-Referer": window.location.href,
+                        },
+                        body: JSON.stringify({ model, messages: msgs, stream: true })
                     });
 
-                    // 3. AI Placeholder
-                    const aiMsgId = Date.now();
-                    this.renderMessage({ role: 'assistant', content: '<span class="typing-dot"></span>' }, aiMsgId);
-                    const aiBubble = document.getElementById(`msg-${aiMsgId}`).querySelector('.prose');
-
-                    // 4. Stream Request
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
                     let fullText = "";
-                    const model = app.state.isWebMode ? app.state.settings.modelWeb : app.state.settings.modelChat;
 
-                    try {
-                        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                            method: "POST",
-                            headers: {
-                                "Authorization": `Bearer ${app.state.settings.apiKey}`,
-                                "Content-Type": "application/json",
-                                "HTTP-Referer": window.location.href,
-                            },
-                            body: JSON.stringify({
-                                model: model,
-                                messages: [systemMsg, ...history],
-                                stream: true
-                            })
-                        });
+                    // Streaming UI Placeholder
+                    this.appendMessage({role: 'assistant', content: '<span class="animate-pulse">...</span>'}, true);
 
-                        const reader = res.body.getReader();
-                        const decoder = new TextDecoder();
-
-                        while(true) {
-                            const { done, value } = await reader.read();
-                            if(done) break;
-                            const chunk = decoder.decode(value);
-                            const lines = chunk.split('\n');
-                            for(const line of lines) {
-                                if(line.startsWith('data: ') && line !== 'data: [DONE]') {
-                                    try {
-                                        const delta = JSON.parse(line.slice(6)).choices[0].delta.content;
-                                        if(delta) {
-                                            fullText += delta;
-                                            aiBubble.innerHTML = DOMPurify.sanitize(marked.parse(fullText));
-                                            app.ui.scrollToBottom();
-                                        }
-                                    } catch(e){}
-                                }
+                    while(true) {
+                        const {done, value} = await reader.read();
+                        if(done) break;
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        for(const line of lines) {
+                            if(line.startsWith('data: ') && line !== 'data: [DONE]') {
+                                try {
+                                    const json = JSON.parse(line.slice(6));
+                                    const content = json.choices[0]?.delta?.content || "";
+                                    fullText += content;
+                                    this.appendMessage({role: 'assistant', content: fullText}, true);
+                                } catch(e) {}
                             }
                         }
-
-                        // 5. Post-Process (Highlight, Canvas, State)
-                        aiBubble.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-                        
-                        // Detect Code for Canvas
-                        app.canvas.detect(fullText);
-                        
-                        // Detect JSON State
-                        app.chat.detectStateUpdate(fullText);
-
-                        // Save
-                        chat.messages.push({ role: 'assistant', content: fullText });
-                        app.storage.save();
-
-                        // Voice Readout?
-                        if(app.state.isVoiceMode) {
-                            app.voice.speak(fullText);
-                        }
-
-                    } catch(err) {
-                        aiBubble.innerText = "Error: " + err.message;
-                    } finally {
-                        app.state.isGenerating = false;
-                        document.getElementById('statusIndicator').innerText = "Ready";
-                        document.getElementById('statusIndicator').classList.remove('animate-pulse');
-                        
-                        // Turn off web mode automatically? No, keep sticky.
                     }
-                },
 
-                renderMessage(msg, tempId = null) {
-                    const div = document.createElement('div');
-                    div.id = tempId ? `msg-${tempId}` : '';
-                    div.className = `w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`;
+                    // Remove stream ID
+                    document.getElementById('streamingMsg').removeAttribute('id');
                     
-                    let contentHTML = '';
-                    
-                    // Attachments
-                    if(msg.attachments && msg.attachments.length > 0) {
-                        contentHTML += `<div class="flex gap-2 mb-2 justify-end">`;
-                        msg.attachments.forEach(url => {
-                            contentHTML += `<img src="${url}" class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700">`;
-                        });
-                        contentHTML += `</div>`;
-                    }
+                    // Save Assistant Msg
+                    chat.messages.push({ role: 'assistant', content: fullText });
+                    this.save();
+                    this.renderHistory();
 
-                    // Text
-                    if(msg.role === 'assistant') {
-                        contentHTML += DOMPurify.sanitize(marked.parse(msg.content));
-                    } else {
-                        contentHTML += msg.content;
-                    }
+                    // Check for Canvas Code
+                    this.checkForCanvas(fullText);
 
-                    div.innerHTML = `
-                        <div class="max-w-[85%] md:max-w-[75%] p-4 text-sm ${msg.role === 'user' ? 'msg-user' : 'prose dark:prose-invert'}">
-                            ${contentHTML}
-                        </div>
-                    `;
-                    
-                    // Post-render highlight for history
-                    if(msg.role === 'assistant') {
-                        div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-                    }
-
-                    document.getElementById('messages').appendChild(div);
-                    document.getElementById('welcome').style.display = 'none';
-                },
-
-                detectStateUpdate(text) {
-                    // Regex for ```json-state { ... } ```
-                    const regex = /```json-state\s*([\s\S]*?)\s*```/;
-                    const match = text.match(regex);
-                    if(match && match[1]) {
-                        try {
-                            const updates = JSON.parse(match[1]);
-                            app.state.variables = { ...app.state.variables, ...updates };
-                            document.getElementById('jsonStateDisplay').innerText = JSON.stringify(app.state.variables, null, 2);
-                            app.ui.switchTab('state');
-                            app.ui.toggleRightPanel(true);
-                            app.storage.save();
-                        } catch(e) { console.error("State parse error", e); }
-                    }
+                } catch(e) {
+                    this.appendMessage({role: 'assistant', content: `**Error:** ${e.message}`});
                 }
             },
 
-            // --- CANVAS MODULE (ARTIFACTS) ---
-            canvas: {
-                detect(text) {
-                    // Look for HTML blocks
-                    if(text.includes('```html') || text.includes('```svg')) {
-                        // Extract content
-                        const htmlMatch = text.match(/```html\s*([\s\S]*?)\s*```/);
-                        const svgMatch = text.match(/```svg\s*([\s\S]*?)\s*```/);
-                        
-                        let code = "";
-                        if(htmlMatch) code = htmlMatch[1];
-                        else if(svgMatch) code = svgMatch[1];
-                        
-                        if(code) {
-                            this.render(code);
-                            // Auto open canvas
-                            document.getElementById('canvasPlaceholder').style.display = 'none';
-                            app.ui.switchTab('canvas');
-                            app.ui.toggleRightPanel(true);
-                        }
-                    }
-                },
-                render(code) {
-                    const frame = document.getElementById('previewFrame');
-                    // Inject basic styles for preview
-                    const fullDoc = `
-                        <!DOCTYPE html>
-                        <html><head>
-                        <style>body{font-family:sans-serif;padding:20px;}</style>
-                        </head><body>${code}</body></html>
-                    `;
-                    frame.srcdoc = fullDoc;
-                },
-                refresh() {
-                    const frame = document.getElementById('previewFrame');
-                    frame.srcdoc = frame.srcdoc;
-                },
-                download() {
-                    const frame = document.getElementById('previewFrame');
-                    const blob = new Blob([frame.srcdoc], { type: 'text/html' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'neurova_artifact.html';
-                    a.click();
+            checkForCanvas(text) {
+                // Simple regex to find HTML code blocks
+                const htmlMatch = text.match(/```html([\s\S]*?)```/);
+                if(htmlMatch) {
+                    const code = htmlMatch[1];
+                    const frame = document.getElementById('canvasFrame');
+                    frame.srcdoc = code;
+                    document.getElementById('canvasPlaceholder').style.display = 'none';
+                    this.toggleCanvas(true);
                 }
             },
-
-            // --- VISION MODULE ---
-            vision: {
-                handleFile(input) {
-                    const file = input.files[0];
-                    if(!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const base64 = e.target.result;
-                        app.state.attachments.push(base64);
-                        
-                        // Show thumbnail
-                        const img = document.createElement('img');
-                        img.src = base64;
-                        img.className = 'h-16 w-16 object-cover rounded-lg border border-gray-200';
-                        const cont = document.getElementById('imagePreview');
-                        cont.classList.remove('hidden');
-                        cont.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            },
-
-            // --- VOICE MODULE (2.0) ---
-            voice: {
-                init() {
-                    if ('webkitSpeechRecognition' in window) {
-                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        app.state.recognition = new SpeechRecognition();
-                        app.state.recognition.continuous = false;
-                        app.state.recognition.lang = 'en-US';
-                        
-                        app.state.recognition.onresult = (e) => {
-                            const txt = e.results[0][0].transcript;
-                            document.getElementById('input').value += txt + " ";
-                            if(app.state.isVoiceMode) {
-                                app.chat.send(); // Auto send in Conversation Mode
-                            }
-                        };
-                        
-                        app.state.recognition.onend = () => {
-                            const btn = document.getElementById('micBtn');
-                            btn.classList.remove('text-red-500', 'animate-pulse');
-                        };
-                    }
-                },
-                toggleMic() {
-                    const btn = document.getElementById('micBtn');
-                    if(btn.classList.contains('text-red-500')) {
-                        app.state.recognition.stop();
-                    } else {
-                        app.state.recognition.start();
-                        btn.classList.add('text-red-500', 'animate-pulse');
-                    }
-                },
-                toggleConversationMode() {
-                    app.state.isVoiceMode = !app.state.isVoiceMode;
-                    const btn = document.getElementById('headsetBtn');
-                    if(app.state.isVoiceMode) {
-                        btn.classList.add('text-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
-                        alert("Conversation Mode Active: AI will listen after speaking.");
-                    } else {
-                        btn.classList.remove('text-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
-                    }
-                },
-                speak(text) {
-                    if(!window.speechSynthesis) return;
-                    // Strip markdown
-                    const cleanText = text.replace(/[*#`]/g, '');
-                    const u = new SpeechSynthesisUtterance(cleanText);
-                    u.onend = () => {
-                        if(app.state.isVoiceMode) {
-                            setTimeout(() => app.voice.toggleMic(), 500); // Re-open mic
-                        }
-                    };
-                    window.speechSynthesis.speak(u);
-                }
-            },
-
-            // --- COMMANDS MODULE ---
-            commands: {
-                execute(cmdString) {
-                    const [cmd, ...args] = cmdString.slice(1).split(' ');
-                    switch(cmd.toLowerCase()) {
-                        case 'reset':
-                        case 'wipe':
-                            app.chat.new();
-                            break;
-                        case 'code':
-                        case 'canvas':
-                            app.ui.toggleRightPanel(true);
-                            break;
-                        case 'save':
-                            const chat = app.state.chats.find(c => c.id === app.state.activeChat);
-                            const blob = new Blob([JSON.stringify(chat, null, 2)], {type:'application/json'});
-                            const a = document.createElement('a');
-                            a.href = URL.createObjectURL(blob);
-                            a.download = `chat_${chat.id}.json`;
-                            a.click();
-                            break;
-                        case 'help':
-                            alert("Commands:\n/reset - Clear Chat\n/code - Open Canvas\n/save - Download Chat\n/web - Toggle Search");
-                            break;
-                        case 'web':
-                            app.chat.toggleWeb();
-                            break;
-                        default:
-                            alert("Unknown command: " + cmd);
-                    }
-                }
+            
+            downloadCanvas() {
+                const frame = document.getElementById('canvasFrame');
+                const blob = new Blob([frame.srcdoc], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'neurova_canvas.html';
+                a.click();
             }
         };
-
-        function forceStart() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('app').style.opacity = '1';
-        }
-
-        window.onload = () => app.init();
     </script>
 </body>
 </html>
