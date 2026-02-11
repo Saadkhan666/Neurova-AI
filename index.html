@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neurova OS | Cloud Sync</title>
+    <title>Neurova OS | Speed Edition</title>
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,7 +52,7 @@
                 <i class="fa-solid fa-brain text-white text-5xl"></i>
             </div>
             <h1 class="text-3xl font-bold mb-2 tracking-tight">Neurova Cloud</h1>
-            <p class="text-gray-400 mb-8">Syncs across all your devices</p>
+            <p class="text-gray-400 mb-8">Fast. Synced. Intelligent.</p>
 
             <button onclick="app.auth.signIn()" class="w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-medium py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-xl group">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6 group-hover:scale-110 transition-transform">
@@ -101,10 +101,10 @@
             <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
                 <div id="welcome" class="h-full flex flex-col items-center justify-center text-center">
                     <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-3xl flex items-center justify-center mb-6 animate-pulse">
-                        <i class="fa-solid fa-cloud text-3xl text-blue-500"></i>
+                        <i class="fa-solid fa-bolt text-3xl text-yellow-500"></i>
                     </div>
-                    <h1 class="text-2xl font-bold">Cloud Sync Active</h1>
-                    <p class="text-gray-400 text-sm mt-2">Your settings and API keys are now synced.</p>
+                    <h1 class="text-2xl font-bold">Speed Mode Active</h1>
+                    <p class="text-gray-400 text-sm mt-2">Streaming enabled for instant responses.</p>
                 </div>
             </div>
 
@@ -135,7 +135,7 @@
 
     <div id="settingsModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md p-6">
-            <h2 class="font-bold mb-4">Settings (Synced)</h2>
+            <h2 class="font-bold mb-4">Settings</h2>
             <div class="space-y-4">
                 <div>
                     <label class="text-xs text-gray-500 uppercase font-bold">OpenRouter API Key</label>
@@ -143,7 +143,8 @@
                 </div>
                 <div>
                     <label class="text-xs text-gray-500 uppercase font-bold">Model ID</label>
-                    <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 mt-1" value="deepseek/deepseek-r1:free">
+                    <input type="text" id="modelInput" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 mt-1" value="google/gemini-2.0-flash-001">
+                    <p class="text-[10px] text-gray-500 mt-1">Faster than DeepSeek. Supports images.</p>
                 </div>
                 <div>
                     <label class="text-xs text-gray-500 uppercase font-bold">System Prompt</label>
@@ -183,11 +184,11 @@
         const app = {
             data: {
                 user: null, chats: [], activeId: null,
-                settings: { apiKey: '', model: 'deepseek/deepseek-r1:free', sysPrompt: 'You are Neurova.', theme: 'dark' },
+                settings: { apiKey: '', model: 'google/gemini-2.0-flash-001', sysPrompt: 'You are Neurova.', theme: 'dark' },
                 webMode: false, uploads: []
             },
 
-            // --- SYNC MODULE (NEW) ---
+            // --- SYNC MODULE ---
             sync: {
                 async pull(uid) {
                     if(!db) return;
@@ -196,8 +197,7 @@
                         if(doc.exists) {
                             const data = doc.data();
                             app.data.settings = { ...app.data.settings, ...data.settings };
-                            console.log("Settings Pulled from Cloud");
-                            // Update Inputs
+                            console.log("Settings Pulled");
                             document.getElementById('apiKeyInput').value = app.data.settings.apiKey || '';
                             document.getElementById('modelInput').value = app.data.settings.model;
                             document.getElementById('sysPromptInput').value = app.data.settings.sysPrompt;
@@ -211,7 +211,6 @@
                             settings: app.data.settings,
                             updatedAt: new Date()
                         }, { merge: true });
-                        console.log("Settings Pushed to Cloud");
                     } catch(e) { console.error("Sync Push Error", e); }
                 }
             },
@@ -253,24 +252,17 @@
                         document.getElementById('userAvatar').src = user.photoURL;
                         document.getElementById('userAvatar').classList.remove('hidden');
                     }
-                    
-                    // Trigger Cloud Sync if logged in
-                    if(user.uid) {
-                        app.sync.pull(user.uid).then(() => app.init());
-                    } else {
-                        app.init();
-                    }
+                    if(user.uid) app.sync.pull(user.uid).then(() => app.init());
+                    else app.init();
                 }
             },
 
             init() {
-                this.loadStorage(); // Load local first
+                this.loadStorage(); 
                 this.ui.applyTheme();
                 
-                // If inputs empty, populate from data
                 if(!document.getElementById('apiKeyInput').value) 
                      document.getElementById('apiKeyInput').value = this.data.settings.apiKey;
-                
                 document.getElementById('modelInput').value = this.data.settings.model;
                 document.getElementById('sysPromptInput').value = this.data.settings.sysPrompt;
                 
@@ -282,7 +274,7 @@
             },
 
             loadStorage() {
-                const saved = localStorage.getItem('neurova_v7');
+                const saved = localStorage.getItem('neurova_v8');
                 if(saved) {
                     const parsed = JSON.parse(saved);
                     this.data.chats = parsed.chats || [];
@@ -290,7 +282,7 @@
                 }
             },
             saveStorage() {
-                localStorage.setItem('neurova_v7', JSON.stringify({ chats: this.data.chats, settings: this.data.settings }));
+                localStorage.setItem('neurova_v8', JSON.stringify({ chats: this.data.chats, settings: this.data.settings }));
             },
 
             chat: {
@@ -309,10 +301,16 @@
                     if(chat) chat.messages.forEach(m => this.append(m));
                     app.ui.renderHistory();
                 },
-                append(msg) {
+                append(msg, isStream=false) {
                     const container = document.getElementById('chatContainer');
-                    const div = document.createElement('div');
-                    div.className = `w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
+                    let div = isStream ? document.getElementById('streamingMsg') : null;
+                    if(!div) {
+                        div = document.createElement('div');
+                        if(isStream) div.id = 'streamingMsg';
+                        div.className = `w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
+                        container.appendChild(div);
+                    }
+                    
                     let attachHTML = '';
                     if(msg.attachments && msg.attachments.length) {
                          attachHTML = `<div class="flex gap-2 mb-2 flex-wrap justify-end">` + 
@@ -322,7 +320,6 @@
                     const content = msg.role === 'user' ? msg.content : DOMPurify.sanitize(marked.parse(msg.content));
                     div.innerHTML = `<div class="max-w-[85%]">${attachHTML}<div class="${msg.role === 'user' ? 'bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2' : 'prose dark:prose-invert'}">${content}</div></div>`;
                     if(msg.role !== 'user') div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-                    container.appendChild(div);
                     container.scrollTop = container.scrollHeight;
                 },
                 async send() {
@@ -337,7 +334,7 @@
                     app.ui.renderDock();
                     document.getElementById('welcome').classList.add('hidden');
                     const btn = document.getElementById('sendBtn');
-                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    btn.disabled = true;
 
                     const chat = app.data.chats.find(c => c.id == app.data.activeId);
                     const imgUrls = uploads.filter(u => u.type.startsWith('image')).map(u => u.content);
@@ -357,29 +354,50 @@
                     });
 
                     try {
+                        this.append({ role: 'assistant', content: '<span class="animate-pulse">●</span>' }, true);
+                        
                         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                             method: "POST",
                             headers: { "Authorization": `Bearer ${app.data.settings.apiKey}`, "Content-Type": "application/json" },
                             body: JSON.stringify({
                                 model: app.data.webMode ? 'perplexity/sonar' : app.data.settings.model,
-                                messages: payload
+                                messages: payload,
+                                stream: true
                             })
                         });
 
-                        const json = await res.json();
-                        if(json.error) throw new Error(json.error.message);
-                        const aiText = json.choices[0].message.content;
-                        const aiMsg = { role: 'assistant', content: aiText };
-                        chat.messages.push(aiMsg);
-                        this.append(aiMsg);
+                        const reader = res.body.getReader();
+                        const decoder = new TextDecoder();
+                        let aiText = "";
+
+                        while(true) {
+                            const { done, value } = await reader.read();
+                            if(done) break;
+                            const chunk = decoder.decode(value);
+                            const lines = chunk.split('\n');
+                            for(const line of lines) {
+                                if(line.startsWith('data: ') && line !== 'data: [DONE]') {
+                                    try {
+                                        const json = JSON.parse(line.slice(6));
+                                        const delta = json.choices[0]?.delta?.content || "";
+                                        aiText += delta;
+                                        this.append({ role: 'assistant', content: aiText }, true);
+                                    } catch(e) {}
+                                }
+                            }
+                        }
+
+                        document.getElementById('streamingMsg').removeAttribute('id');
+                        chat.messages.push({ role: 'assistant', content: aiText });
                         app.saveStorage();
+                        
                         if(aiText.includes('```html')) {
                              const code = aiText.match(/```html([\s\S]*?)```/)[1];
                              document.getElementById('canvasFrame').srcdoc = code;
                              app.ui.toggleCanvas(true);
                         }
                     } catch(e) { alert("Error: " + e.message); } 
-                    finally { btn.innerHTML = '<i class="fa-solid fa-arrow-up text-sm"></i>'; }
+                    finally { btn.disabled = false; }
                 },
                 toggleWeb() {
                     app.data.webMode = !app.data.webMode;
@@ -405,7 +423,7 @@
                     app.data.settings.model = document.getElementById('modelInput').value;
                     app.data.settings.sysPrompt = document.getElementById('sysPromptInput').value;
                     app.saveStorage();
-                    app.sync.push(); // Push to Cloud!
+                    app.sync.push(); 
                     this.toggleSettings();
                 },
                 toggleTheme() {
