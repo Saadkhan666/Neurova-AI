@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neurova OS | Vercel Edition</title>
+    <title>Neurova OS | Cloud Sync</title>
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -51,16 +51,16 @@
             <div class="w-24 h-24 mx-auto bg-gradient-to-tr from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/20 animate-float">
                 <i class="fa-solid fa-brain text-white text-5xl"></i>
             </div>
-            <h1 class="text-3xl font-bold mb-2 tracking-tight">Neurova OS</h1>
-            <p class="text-gray-400 mb-8">Vercel Cloud Edition</p>
+            <h1 class="text-3xl font-bold mb-2 tracking-tight">Neurova Cloud</h1>
+            <p class="text-gray-400 mb-8">Syncs across all your devices</p>
 
             <button onclick="app.auth.signIn()" class="w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-medium py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-xl group">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6 group-hover:scale-110 transition-transform">
-                <span>Continue with Google</span>
+                <span>Sign in with Google</span>
             </button>
             
             <div class="mt-6 text-xs text-gray-400">
-                <button onclick="app.auth.guest()" class="mt-4 underline hover:text-blue-500">Or continue as Guest (Local)</button>
+                <button onclick="app.auth.guest()" class="mt-4 underline hover:text-blue-500">Or use offline (No Sync)</button>
             </div>
         </div>
     </div>
@@ -101,10 +101,10 @@
             <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
                 <div id="welcome" class="h-full flex flex-col items-center justify-center text-center">
                     <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-3xl flex items-center justify-center mb-6 animate-pulse">
-                        <i class="fa-solid fa-wand-magic-sparkles text-3xl text-blue-500"></i>
+                        <i class="fa-solid fa-cloud text-3xl text-blue-500"></i>
                     </div>
-                    <h1 class="text-2xl font-bold">Ready to Create?</h1>
-                    <p class="text-gray-400 text-sm mt-2">Enter your API Key in Settings to begin.</p>
+                    <h1 class="text-2xl font-bold">Cloud Sync Active</h1>
+                    <p class="text-gray-400 text-sm mt-2">Your settings and API keys are now synced.</p>
                 </div>
             </div>
 
@@ -135,7 +135,7 @@
 
     <div id="settingsModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md p-6">
-            <h2 class="font-bold mb-4">Settings</h2>
+            <h2 class="font-bold mb-4">Settings (Synced)</h2>
             <div class="space-y-4">
                 <div>
                     <label class="text-xs text-gray-500 uppercase font-bold">OpenRouter API Key</label>
@@ -152,7 +152,7 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <button onclick="app.ui.toggleSettings()" class="text-gray-500 px-4">Cancel</button>
-                <button onclick="app.ui.saveSettings()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Save</button>
+                <button onclick="app.ui.saveSettings()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Save & Sync</button>
             </div>
         </div>
     </div>
@@ -171,11 +171,12 @@
   measurementId: "G-G3E38VSKM7"
 };
 
-        let auth = null;
+        let auth = null, db = null;
         try {
             if(Object.keys(firebaseConfig).length > 0) {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
+                db = firebase.firestore();
             }
         } catch(e) { console.error("Firebase Init Error", e); }
 
@@ -184,6 +185,35 @@
                 user: null, chats: [], activeId: null,
                 settings: { apiKey: '', model: 'deepseek/deepseek-r1:free', sysPrompt: 'You are Neurova.', theme: 'dark' },
                 webMode: false, uploads: []
+            },
+
+            // --- SYNC MODULE (NEW) ---
+            sync: {
+                async pull(uid) {
+                    if(!db) return;
+                    try {
+                        const doc = await db.collection('users').doc(uid).get();
+                        if(doc.exists) {
+                            const data = doc.data();
+                            app.data.settings = { ...app.data.settings, ...data.settings };
+                            console.log("Settings Pulled from Cloud");
+                            // Update Inputs
+                            document.getElementById('apiKeyInput').value = app.data.settings.apiKey || '';
+                            document.getElementById('modelInput').value = app.data.settings.model;
+                            document.getElementById('sysPromptInput').value = app.data.settings.sysPrompt;
+                        }
+                    } catch(e) { console.error("Sync Error", e); }
+                },
+                async push() {
+                    if(!db || !app.data.user) return;
+                    try {
+                        await db.collection('users').doc(app.data.user.uid).set({
+                            settings: app.data.settings,
+                            updatedAt: new Date()
+                        }, { merge: true });
+                        console.log("Settings Pushed to Cloud");
+                    } catch(e) { console.error("Sync Push Error", e); }
+                }
             },
 
             auth: {
@@ -196,13 +226,13 @@
                     } else if(localStorage.getItem('neurova_guest')) this.guest();
                 },
                 signIn() {
-                    if(!auth) { alert("Firebase Config Missing in code!"); return; }
+                    if(!auth) { alert("Config Missing!"); return; }
                     const provider = new firebase.auth.GoogleAuthProvider();
                     auth.signInWithPopup(provider).then((r) => this.onLoginSuccess(r.user)).catch((e) => alert(e.message));
                 },
                 guest() {
                     localStorage.setItem('neurova_guest', 'true');
-                    this.onLoginSuccess({ displayName: 'Guest User', photoURL: null, email: 'Local Session' });
+                    this.onLoginSuccess({ displayName: 'Guest User', photoURL: null, email: 'Local Session', uid: null });
                 },
                 logout() {
                     if(auth) auth.signOut();
@@ -223,16 +253,27 @@
                         document.getElementById('userAvatar').src = user.photoURL;
                         document.getElementById('userAvatar').classList.remove('hidden');
                     }
-                    app.init();
+                    
+                    // Trigger Cloud Sync if logged in
+                    if(user.uid) {
+                        app.sync.pull(user.uid).then(() => app.init());
+                    } else {
+                        app.init();
+                    }
                 }
             },
 
             init() {
-                this.loadStorage();
+                this.loadStorage(); // Load local first
                 this.ui.applyTheme();
-                document.getElementById('apiKeyInput').value = this.data.settings.apiKey;
+                
+                // If inputs empty, populate from data
+                if(!document.getElementById('apiKeyInput').value) 
+                     document.getElementById('apiKeyInput').value = this.data.settings.apiKey;
+                
                 document.getElementById('modelInput').value = this.data.settings.model;
                 document.getElementById('sysPromptInput').value = this.data.settings.sysPrompt;
+                
                 if(this.data.chats.length === 0) app.chat.new(false);
                 else app.chat.load(this.data.chats[0].id);
                 document.getElementById('userInput').addEventListener('keydown', (e) => {
@@ -241,7 +282,7 @@
             },
 
             loadStorage() {
-                const saved = localStorage.getItem('neurova_v6');
+                const saved = localStorage.getItem('neurova_v7');
                 if(saved) {
                     const parsed = JSON.parse(saved);
                     this.data.chats = parsed.chats || [];
@@ -249,7 +290,7 @@
                 }
             },
             saveStorage() {
-                localStorage.setItem('neurova_v6', JSON.stringify({ chats: this.data.chats, settings: this.data.settings }));
+                localStorage.setItem('neurova_v7', JSON.stringify({ chats: this.data.chats, settings: this.data.settings }));
             },
 
             chat: {
@@ -289,20 +330,13 @@
                     const text = input.value.trim();
                     const uploads = app.data.uploads;
                     if(!text && uploads.length === 0) return;
-                    
-                    // --- SAFETY CHECK FOR API KEY ---
-                    if(!app.data.settings.apiKey) { 
-                        app.ui.toggleSettings(); 
-                        alert("Please enter your OpenRouter API Key in settings."); 
-                        return; 
-                    }
+                    if(!app.data.settings.apiKey) { app.ui.toggleSettings(); return; }
 
                     input.value = '';
                     app.data.uploads = [];
                     app.ui.renderDock();
                     document.getElementById('welcome').classList.add('hidden');
                     const btn = document.getElementById('sendBtn');
-                    btn.disabled = true;
                     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
                     const chat = app.data.chats.find(c => c.id == app.data.activeId);
@@ -333,15 +367,7 @@
                         });
 
                         const json = await res.json();
-                        
-                        // --- ERROR TRAP ---
-                        if(json.error) {
-                            throw new Error(json.error.message || "Unknown API Error");
-                        }
-                        if(!json.choices || json.choices.length === 0) {
-                            throw new Error("API returned no content. Check your balance.");
-                        }
-
+                        if(json.error) throw new Error(json.error.message);
                         const aiText = json.choices[0].message.content;
                         const aiMsg = { role: 'assistant', content: aiText };
                         chat.messages.push(aiMsg);
@@ -352,12 +378,8 @@
                              document.getElementById('canvasFrame').srcdoc = code;
                              app.ui.toggleCanvas(true);
                         }
-                    } catch(e) { 
-                        alert("Neurova Error: " + e.message); 
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fa-solid fa-arrow-up text-sm"></i>';
-                    }
+                    } catch(e) { alert("Error: " + e.message); } 
+                    finally { btn.innerHTML = '<i class="fa-solid fa-arrow-up text-sm"></i>'; }
                 },
                 toggleWeb() {
                     app.data.webMode = !app.data.webMode;
@@ -383,6 +405,7 @@
                     app.data.settings.model = document.getElementById('modelInput').value;
                     app.data.settings.sysPrompt = document.getElementById('sysPromptInput').value;
                     app.saveStorage();
+                    app.sync.push(); // Push to Cloud!
                     this.toggleSettings();
                 },
                 toggleTheme() {
