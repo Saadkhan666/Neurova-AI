@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neurova OS | Saad Khan</title>
+    
+    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,27 +24,44 @@
         }
     </script>
     
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        body { font-family: 'Inter', sans-serif; overflow: hidden; background: #131314; color: #e3e3e3; }
-        .msg-user { background: #282a2c; border-radius: 18px 18px 4px 18px; }
-        .msg-ai { background: transparent; }
-        #canvasPanel { transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1); }
-        .canvas-open #canvasPanel { transform: translateX(0); }
-    </style>
 </head>
 <body class="h-full flex transition-colors duration-300">
 
-    <div id="appContainer" class="flex-1 flex h-full opacity-0 transition-opacity duration-500">
+    <div id="authGate" class="fixed inset-0 z-[100] bg-[#131314] flex flex-col items-center justify-center transition-all duration-700">
+        <div class="relative w-full max-w-md p-8 text-center">
+            <div class="w-24 h-24 mx-auto bg-gradient-to-tr from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl animate-float">
+                <i class="fa-solid fa-brain text-white text-5xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold mb-2 text-white">Neurova OS</h1>
+            <p class="text-gray-400 mb-10 text-sm">Created by Saad Khan</p>
+
+            <button id="googleBtn" onclick="app.auth.signIn()" class="w-full bg-[#1e1f20] hover:bg-[#2d2e30] border border-gray-700 text-white font-medium py-4 px-6 rounded-full flex items-center justify-center gap-3 transition-all shadow-lg">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">
+                <span>Sign in with Google</span>
+            </button>
+            
+            <p id="errorMsg" class="text-red-400 text-xs mt-4 hidden"></p>
+
+            <button onclick="app.auth.guest()" class="mt-6 text-xs text-gray-500 hover:text-white transition underline">
+                Continue as Guest (Offline Mode)
+            </button>
+        </div>
+    </div>
+
+    <div id="appContainer" class="flex-1 flex h-full opacity-0 transition-opacity duration-1000 pointer-events-none">
         
         <aside class="w-72 bg-[#0b0b0c] border-r border-[#1e1f20] flex flex-col hidden md:flex shrink-0">
             <div class="p-5 flex items-center justify-between">
-                <div class="font-bold text-lg text-white tracking-wide">Neurova</div>
+                <div class="font-bold text-lg text-white">Neurova</div>
                 <button onclick="app.ui.toggleSettings()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-cog"></i></button>
             </div>
             <div class="px-4 mb-4">
@@ -52,19 +71,17 @@
             </div>
             <div id="chatList" class="flex-1 overflow-y-auto px-2 space-y-1"></div>
             
-            <div class="p-4 border-t border-[#1e1f20]">
-                <div class="p-3 rounded-xl bg-[#1e1f20] flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">SK</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium truncate text-white">Owner Mode</p>
-                        <p class="text-[10px] text-gray-500">Licensed to Saad Khan</p>
-                    </div>
+            <div class="p-4 border-t border-[#1e1f20] flex items-center gap-3">
+                <img id="userAvatar" class="w-8 h-8 rounded-full bg-gray-700 object-cover">
+                <div class="flex-1 min-w-0">
+                    <p id="userName" class="text-sm font-medium truncate text-white">Guest</p>
+                    <button onclick="app.auth.logout()" class="text-[10px] text-gray-500 hover:text-red-400">Sign Out</button>
                 </div>
             </div>
         </aside>
 
         <main class="flex-1 flex flex-col h-full relative min-w-0 bg-[#131314]">
-            <header class="md:hidden h-16 flex items-center justify-between px-4 sticky top-0 bg-[#131314]/90 backdrop-blur z-20 border-b border-[#1e1f20]">
+            <header class="md:hidden h-16 flex items-center justify-between px-4 sticky top-0 bg-[#131314]/90 backdrop-blur z-20">
                 <span class="font-bold text-lg text-white">Neurova</span>
                 <div class="flex gap-4">
                     <button onclick="app.ui.toggleCanvas(true)"><i class="fa-solid fa-code text-gray-400"></i></button>
@@ -74,11 +91,8 @@
 
             <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth">
                 <div id="welcome" class="h-full flex flex-col items-center justify-center text-center pb-20">
-                    <div class="w-20 h-20 mb-6 bg-[#1e1f20] rounded-3xl flex items-center justify-center shadow-2xl">
-                        <i class="fa-solid fa-brain text-4xl text-blue-500"></i>
-                    </div>
-                    <div class="text-3xl mb-2 font-bold text-white">Neurova OS</div>
-                    <p class="text-gray-500 text-sm">Created by Saad Khan</p>
+                    <div class="text-3xl mb-2 font-bold text-white">Hello, I am Neurova.</div>
+                    <p class="text-gray-500 text-sm">Engineered by Saad Khan</p>
                 </div>
             </div>
 
@@ -117,7 +131,7 @@
                     </select>
                 </div>
                 <div class="p-3 bg-blue-900/20 border border-blue-900/50 rounded-lg">
-                    <p class="text-xs text-blue-200">Owner Mode Active. API Key is hidden.</p>
+                    <p class="text-xs text-blue-200"><i class="fa-solid fa-check-circle mr-1"></i> Owner License Active (Saad Khan)</p>
                 </div>
             </div>
             <div class="mt-6 flex justify-end gap-2">
@@ -128,52 +142,130 @@
     </div>
 
     <script>
-                // ==========================================
-        // 🛑 CONFIGURATION AREA
-        // ==========================================
+        /**
+         * 🛑 CONFIGURATION ZONE
+         * PASTE YOUR KEYS HERE CAREFULLY
+         */
         
-        // 1. PASTE FIREBASE KEYS HERE
-        
-const firebaseConfig = {
-  apiKey: "AIzaSyCB5b4co_uTC2U7xP0gsJ90kXzG5y92XdA",
-  authDomain: "neurova-ai-6b79e.firebaseapp.com",
-  projectId: "neurova-ai-6b79e",
-  storageBucket: "neurova-ai-6b79e.firebasestorage.app",
-  messagingSenderId: "771416729770",
-  appId: "1:771416729770:web:8b781ed3d3845198cd88d3",
-  measurementId: "G-G3E38VSKM7"
+        // 1. FIREBASE CONFIG (From Firebase Console)
+        const firebaseConfig = {
+  apiKey: "AIzaSyCB5b4co_uTC2U7xP0gsJ90kXzG5y92XdA",
+  authDomain: "neurova-ai-6b79e.firebaseapp.com",
+  projectId: "neurova-ai-6b79e",
+  storageBucket: "neurova-ai-6b79e.firebasestorage.app",
+  messagingSenderId: "771416729770",
+  appId: "1:771416729770:web:8b781ed3d3845198cd88d3",
+  measurementId: "G-G3E38VSKM7"
 };
+
+        // 2. OPENROUTER API KEY (Your Secret Key)
+        const OWNER_API_KEY = "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"; // <--- PASTE KEY HERE
+
+        // ==========================================
         
-        // ==========================================
-        // 🛑 PASTE YOUR KEY HERE
-        // ==========================================
-        const OWNER_API_KEY = "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"; // <--- REPLACE THIS WITH YOUR KEY
-        // ==========================================
+        let auth, db;
+        try {
+            if(Object.keys(firebaseConfig).length > 0) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                // Enable Remember Me
+                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+            }
+        } catch(e) { console.error(e); }
 
         const app = {
-            data: {
-                chats: [], activeId: null,
-                settings: { model: 'google/gemini-2.0-flash-001' },
-                uploads: []
+            data: { user: null, chats: [], activeId: null, settings: { model: 'google/gemini-2.0-flash-001' }, uploads: [] },
+            
+            // AUTHENTICATION LOGIC
+            auth: {
+                init() {
+                    // 1. Check Local Storage (Fastest)
+                    const localUser = localStorage.getItem('neurova_user');
+                    if(localUser) this.success(JSON.parse(localUser));
+
+                    // 2. Check Firebase (Secure)
+                    if(auth) {
+                        auth.onAuthStateChanged(user => {
+                            if(user) {
+                                localStorage.setItem('neurova_user', JSON.stringify(user));
+                                this.success(user);
+                            } else {
+                                // If not logged in via Google, check for Guest Mode
+                                if(!localStorage.getItem('neurova_guest')) {
+                                    localStorage.removeItem('neurova_user');
+                                }
+                            }
+                        });
+                    }
+                    
+                    // 3. Check Guest Flag
+                    if(localStorage.getItem('neurova_guest') && !localUser) this.guest();
+                },
+                signIn() {
+                    if(!auth) {
+                        document.getElementById('errorMsg').innerText = "Error: Firebase Config is empty in index.html";
+                        document.getElementById('errorMsg').classList.remove('hidden');
+                        return;
+                    }
+                    const btn = document.getElementById('googleBtn');
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Signing in...';
+                    
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    auth.signInWithPopup(provider)
+                        .then(res => this.success(res.user))
+                        .catch(e => {
+                            btn.innerHTML = 'Sign in with Google';
+                            const errDiv = document.getElementById('errorMsg');
+                            errDiv.innerText = "Login Failed: " + e.message;
+                            errDiv.classList.remove('hidden');
+                        });
+                },
+                guest() {
+                    localStorage.setItem('neurova_guest', 'true');
+                    this.success({ displayName: 'Guest', photoURL: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', uid: 'guest' });
+                },
+                logout() {
+                    if(auth) auth.signOut();
+                    localStorage.removeItem('neurova_user');
+                    localStorage.removeItem('neurova_guest');
+                    location.reload();
+                },
+                success(user) {
+                    app.data.user = user;
+                    // Hide Login Gate
+                    const gate = document.getElementById('authGate');
+                    gate.style.opacity = '0';
+                    setTimeout(() => gate.style.display = 'none', 700);
+                    
+                    // Show App
+                    const container = document.getElementById('appContainer');
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
+                    
+                    // Update Profile
+                    document.getElementById('userName').innerText = user.displayName || 'Guest';
+                    if(user.photoURL) document.getElementById('userAvatar').src = user.photoURL;
+                    
+                    app.init();
+                }
             },
 
+            // MAIN APP LOGIC
             init() {
-                // Auto-Login: Load saved data immediately
-                const s = localStorage.getItem('neurova_local');
+                const s = localStorage.getItem('neurova_data');
                 if(s) { const p = JSON.parse(s); app.data.chats = p.chats||[]; app.data.settings = {...app.data.settings, ...p.settings}; }
-                
-                // Show App immediately (No Login Gate)
-                document.getElementById('appContainer').style.opacity = '1';
-                
-                if(app.data.chats.length === 0) app.chat.new(false);
-                else app.chat.load(app.data.chats[0].id);
+                if(app.data.chats.length === 0) app.chat.new(false); else app.chat.load(app.data.chats[0].id);
                 
                 document.getElementById('userInput').addEventListener('keydown', e => { 
                     if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); app.chat.send(); } 
                 });
+                
+                // Register Service Worker for PWA
+                if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
             },
 
-            save() { localStorage.setItem('neurova_local', JSON.stringify({ chats: app.data.chats, settings: app.data.settings })); },
+            save() { localStorage.setItem('neurova_data', JSON.stringify({ chats: app.data.chats, settings: app.data.settings })); },
 
             chat: {
                 new(render=true) {
@@ -228,7 +320,7 @@ const firebaseConfig = {
                     app.save();
 
                     // SAAD KHAN SYSTEM PROMPT
-                    const systemPrompt = "You are Neurova, created by Saad Khan. If asked about your creator, answer 'Saad Khan'. Be helpful and concise.";
+                    const systemPrompt = "You are Neurova, an advanced AI created by Saad Khan. If asked about your creator, answer 'Saad Khan'. Be concise, helpful, and intelligent.";
 
                     const history = c.messages.map(m => {
                         if(m.attachments?.length) return { role: m.role, content: [{type:'text', text:m.content}, ...m.attachments.map(u=>({type:'image_url', image_url:{url:u}}))] };
@@ -238,6 +330,8 @@ const firebaseConfig = {
 
                     try {
                         this.append({ role: 'assistant', content: '●' }, true);
+                        
+                        // STREAMING REQUEST
                         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                             method: "POST",
                             headers: { "Authorization": `Bearer ${OWNER_API_KEY}`, "Content-Type": "application/json" },
@@ -258,7 +352,12 @@ const firebaseConfig = {
                             const chunk = decoder.decode(value);
                             chunk.split('\n').forEach(line => {
                                 if(line.startsWith('data: ') && line !== 'data: [DONE]') {
-                                    try { aiText += JSON.parse(line.slice(6)).choices[0].delta.content || ""; this.append({ role:'assistant', content: aiText }, true); } catch(e){}
+                                    try { 
+                                        const json = JSON.parse(line.slice(6));
+                                        const content = json.choices[0].delta.content || "";
+                                        aiText += content;
+                                        this.append({ role:'assistant', content: aiText }, true);
+                                    } catch(e){}
                                 }
                             });
                         }
@@ -267,13 +366,19 @@ const firebaseConfig = {
                         c.messages.push({ role: 'assistant', content: aiText });
                         app.save();
 
+                        // Canvas Check
                         if(aiText.includes('```html')) {
                             const code = aiText.match(/```html([\s\S]*?)```/)[1];
                             document.getElementById('canvasFrame').srcdoc = code;
                             app.ui.toggleCanvas(true);
                         }
 
-                    } catch(e) { alert("Error: " + e.message); }
+                    } catch(e) { 
+                        alert("API Error: " + e.message);
+                        // Clean up loading state if error
+                        const loader = document.getElementById('streamingMsg');
+                        if(loader) loader.innerHTML = "<span class='text-red-400'>Error generating response.</span>";
+                    }
                 }
             },
             files: {
@@ -287,10 +392,7 @@ const firebaseConfig = {
             },
             ui: {
                 toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); },
-                saveSettings() {
-                    app.data.settings.model = document.getElementById('modelSelect').value;
-                    app.save(); this.toggleSettings();
-                },
+                saveSettings() { app.data.settings.model = document.getElementById('modelSelect').value; app.save(); this.toggleSettings(); },
                 renderHistory() {
                     const l = document.getElementById('chatList'); l.innerHTML = '';
                     app.data.chats.forEach(c => {
@@ -311,7 +413,7 @@ const firebaseConfig = {
                 }
             }
         };
-        window.onload = () => app.init();
+        window.onload = () => app.auth.init();
     </script>
 </body>
 </html>
