@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neurova OS | UI Design Kit</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: { 850: '#131314', 900: '#0b0b0c', 950: '#000000' }, // Deep Space Dark
+                        blue: { 500: '#a8c7fa', 600: '#1c6ef0' },
+                    },
+                    animation: { 
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: { 
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } } 
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; overflow: hidden; background: #131314; color: #e3e3e3; }
+        
+        /* Scrollbar Design */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+        /* Chat Bubbles */
+        .msg-user { background: #282a2c; border-radius: 18px 18px 4px 18px; color: #fff; }
+        .msg-ai { background: transparent; color: #e3e3e3; line-height: 1.6; }
+        
+        /* Code Block Simulation */
+        .mock-code { background: #1e1f20; border: 1px solid #333; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 0.9em; color: #a8c7fa; margin-top: 8px; }
+
+        /* Canvas Panel Transition */
+        #canvasPanel { transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1); }
+        
+        /* Blur Effects */
+        .glass { background: rgba(19, 19, 20, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body class="h-full flex">
+
+    <aside class="w-72 bg-[#0b0b0c] border-r border-[#1e1f20] flex flex-col hidden md:flex shrink-0">
+        <div class="p-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-brain text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-lg text-white tracking-wide">Neurova</span>
+            </div>
+            <button class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-cog"></i></button>
+        </div>
+
+        <div class="px-4 mb-4">
+            <button class="w-full bg-[#1e1f20] hover:bg-[#2c2d30] text-gray-200 rounded-full py-3 text-sm font-medium flex items-center gap-3 px-4 transition group">
+                <div class="bg-gray-700 group-hover:bg-gray-600 w-6 h-6 rounded-full flex items-center justify-center text-[10px]">
+                    <i class="fa-solid fa-plus text-white"></i>
+                </div>
+                <span>New chat</span>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-2 space-y-1">
+            <div class="p-3 rounded-r-full border-l-2 border-blue-500 bg-[#1e1f20] cursor-pointer text-sm text-blue-100 font-medium">
+                Website Redesign Concept
+            </div>
+            <div class="p-3 rounded-r-full border-l-2 border-transparent hover:bg-[#1e1f20] cursor-pointer text-sm text-gray-400">
+                Python Script Help
+            </div>
+            <div class="p-3 rounded-r-full border-l-2 border-transparent hover:bg-[#1e1f20] cursor-pointer text-sm text-gray-400">
+                Marketing Copy Ideas
+            </div>
+        </div>
+        
+        <div class="p-4 border-t border-[#1e1f20]">
+            <div class="p-3 rounded-xl bg-[#1e1f20]/50 hover:bg-[#1e1f20] cursor-pointer transition flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white shadow-inner border border-white/10">
+                    SK
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-white">Saad Khan</p>
+                    <p class="text-[10px] text-gray-500 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Pro Account
+                    </p>
+                </div>
+                <i class="fa-solid fa-ellipsis-vertical text-gray-500"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative min-w-0 bg-[#131314]">
+        
+        <header class="md:hidden h-16 flex items-center justify-between px-4 sticky top-0 bg-[#131314]/90 backdrop-blur z-20 border-b border-[#1e1f20]">
+            <span class="font-bold text-lg text-white">Neurova</span>
+            <div class="flex gap-4">
+                <button><i class="fa-solid fa-code text-gray-400"></i></button>
+                <button><i class="fa-solid fa-bars text-gray-400"></i></button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth">
+            
+            <div class="w-full flex justify-start">
+                <div class="max-w-[85%] md:max-w-[75%]">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-brain text-blue-500 text-xs"></i>
+                        <span class="text-xs font-bold text-gray-400">NEUROVA</span>
+                    </div>
+                    <div class="msg-ai">
+                        <p>Hello! I am ready to help you build something amazing today. Here is the design layout you requested.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full flex justify-end">
+                <div class="max-w-[85%] md:max-w-[75%] flex flex-col items-end">
+                    <div class="msg-user p-4 text-sm shadow-md">
+                        Can you show me how a code block looks in this design?
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full flex justify-start">
+                <div class="max-w-[85%] md:max-w-[75%]">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-brain text-blue-500 text-xs"></i>
+                        <span class="text-xs font-bold text-gray-400">NEUROVA</span>
+                    </div>
+                    <div class="msg-ai">
+                        <p>Certainly. Here is a Python example styling:</p>
+                        <div class="mock-code">
+                            <span class="text-purple-400">def</span> <span class="text-blue-400">hello_world</span>():<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-yellow-400">print</span>(<span class="text-green-400">"Hello Design!"</span>)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="p-4 md:pb-6 max-w-4xl mx-auto w-full z-20 relative">
+            
+            <div class="relative bg-[#1e1f20] rounded-[2rem] border border-gray-700 focus-within:border-gray-500 focus-within:shadow-lg focus-within:shadow-blue-500/10 transition-all">
+                <textarea rows="1" class="w-full bg-transparent border-none text-gray-200 px-6 py-4 pr-32 focus:ring-0 resize-none max-h-48 placeholder-gray-500" placeholder="Ask anything..."></textarea>
+                
+                <div class="absolute right-3 bottom-2 flex items-center gap-2">
+                    <button class="p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700">
+                        <i class="fa-regular fa-image"></i>
+                    </button>
+                    <button class="p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <button class="bg-white text-black rounded-full w-10 h-10 flex items-center justify-center hover:bg-gray-200 transition shadow-lg shadow-white/10">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3 text-[10px] text-gray-500 font-medium">
+                Powered by Gemini 2.0 Flash • Designed by Saad Khan
+            </div>
+        </div>
+    </main>
+
+    <aside class="fixed inset-y-0 right-0 w-[500px] bg-[#131314] border-l border-[#1e1f20] shadow-2xl z-40 transform translate-x-full flex flex-col">
+        <div class="h-14 border-b border-[#1e1f20] flex items-center justify-between px-4 bg-[#0b0b0c]">
+            <span class="font-bold text-xs uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-blue-500"></i> Artifact Preview
+            </span>
+            <button class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="flex-1 bg-white flex items-center justify-center text-gray-400">
+            Preview Frame
+        </div>
+    </aside>
+
+</body>
+</html>
