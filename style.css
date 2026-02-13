@@ -1,0 +1,16 @@
+body { font-family: 'Inter', system-ui, -apple-system, sans-serif; overflow: hidden; background-color: #131314; color: #e3e3e3; margin: 0; padding: 0; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #444; }
+.msg-user { background-color: #282a2c; border-radius: 18px 18px 4px 18px; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.msg-ai { background: transparent; color: #e3e3e3; line-height: 1.6; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.animate-float { animation: float 6s ease-in-out infinite; }
+#canvasPanel { transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1); }
+.canvas-open #canvasPanel { transform: translateX(0); }
+.spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+/* Markdown Code Blocks */
+pre { background: #1e1f20 !important; border-radius: 8px; padding: 12px; border: 1px solid #333; overflow-x: auto; }
+code { color: #a8c7fa; font-family: monospace; }
