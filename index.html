@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neurova OS | Saad Khan Edition</title>
+    <title>Neurova OS | Saad Khan</title>
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,17 +16,12 @@
                         gray: { 850: '#131314', 900: '#0b0b0c', 950: '#000000' },
                         blue: { 500: '#a8c7fa', 600: '#1c6ef0' },
                     },
-                    animation: { 'float': 'float 6s ease-in-out infinite' },
-                    keyframes: { float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } } }
+                    animation: { 'float': 'float 6s ease-in-out infinite' }
                 }
             }
         }
     </script>
     
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -39,38 +34,15 @@
         .msg-ai { background: transparent; }
         #canvasPanel { transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1); }
         .canvas-open #canvasPanel { transform: translateX(0); }
-        
-        /* Spinner */
-        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="h-full flex transition-colors duration-300">
 
-    <div id="authGate" class="fixed inset-0 z-[100] bg-[#131314] flex flex-col items-center justify-center transition-all duration-700">
-        <div class="relative w-full max-w-md p-8 text-center">
-            <div class="w-24 h-24 mx-auto bg-gradient-to-tr from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl animate-float">
-                <i class="fa-solid fa-brain text-white text-5xl"></i>
-            </div>
-            
-            <h1 class="text-4xl font-bold mb-2 text-white">Neurova OS</h1>
-            <p class="text-gray-400 mb-10 text-sm">Created by Saad Khan</p>
-
-            <button id="googleBtn" onclick="app.auth.signIn()" class="w-full bg-[#1e1f20] hover:bg-[#2d2e30] border border-gray-700 text-white font-medium py-4 px-6 rounded-full flex items-center justify-center gap-3 transition-all">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">
-                <span>Sign in with Google</span>
-            </button>
-            <div id="loginError" class="text-red-400 text-xs mt-4 hidden"></div>
-
-            <button onclick="app.auth.guest()" class="mt-6 text-xs text-gray-500 hover:text-white transition underline">Continue as Guest (Offline)</button>
-        </div>
-    </div>
-
-    <div id="appContainer" class="flex-1 flex h-full opacity-0 transition-opacity duration-1000 pointer-events-none">
+    <div id="appContainer" class="flex-1 flex h-full opacity-0 transition-opacity duration-500">
         
         <aside class="w-72 bg-[#0b0b0c] border-r border-[#1e1f20] flex flex-col hidden md:flex shrink-0">
             <div class="p-5 flex items-center justify-between">
-                <div class="font-bold text-lg text-white">Neurova</div>
+                <div class="font-bold text-lg text-white tracking-wide">Neurova</div>
                 <button onclick="app.ui.toggleSettings()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-cog"></i></button>
             </div>
             <div class="px-4 mb-4">
@@ -80,17 +52,19 @@
             </div>
             <div id="chatList" class="flex-1 overflow-y-auto px-2 space-y-1"></div>
             
-            <div class="p-4 border-t border-[#1e1f20] flex items-center gap-3">
-                <img id="userAvatar" class="w-8 h-8 rounded-full bg-gray-700 object-cover">
-                <div class="flex-1 min-w-0">
-                    <p id="userName" class="text-sm font-medium truncate text-white">Guest</p>
-                    <button onclick="app.auth.logout()" class="text-[10px] text-gray-500 hover:text-red-400">Sign Out</button>
+            <div class="p-4 border-t border-[#1e1f20]">
+                <div class="p-3 rounded-xl bg-[#1e1f20] flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">SK</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate text-white">Owner Mode</p>
+                        <p class="text-[10px] text-gray-500">Licensed to Saad Khan</p>
+                    </div>
                 </div>
             </div>
         </aside>
 
         <main class="flex-1 flex flex-col h-full relative min-w-0 bg-[#131314]">
-            <header class="md:hidden h-16 flex items-center justify-between px-4 sticky top-0 bg-[#131314]/80 backdrop-blur z-20">
+            <header class="md:hidden h-16 flex items-center justify-between px-4 sticky top-0 bg-[#131314]/90 backdrop-blur z-20 border-b border-[#1e1f20]">
                 <span class="font-bold text-lg text-white">Neurova</span>
                 <div class="flex gap-4">
                     <button onclick="app.ui.toggleCanvas(true)"><i class="fa-solid fa-code text-gray-400"></i></button>
@@ -100,15 +74,19 @@
 
             <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth">
                 <div id="welcome" class="h-full flex flex-col items-center justify-center text-center pb-20">
-                    <div class="text-3xl mb-2 font-bold text-white">Hello, I am Neurova.</div>
+                    <div class="w-20 h-20 mb-6 bg-[#1e1f20] rounded-3xl flex items-center justify-center shadow-2xl">
+                        <i class="fa-solid fa-brain text-4xl text-blue-500"></i>
+                    </div>
+                    <div class="text-3xl mb-2 font-bold text-white">Neurova OS</div>
                     <p class="text-gray-500 text-sm">Created by Saad Khan</p>
                 </div>
             </div>
 
             <div class="p-4 md:pb-6 max-w-4xl mx-auto w-full z-20 relative">
                 <div id="previewDock" class="hidden flex gap-2 p-2 mb-2 bg-[#1e1f20] rounded-xl border border-gray-800 w-max max-w-full overflow-x-auto"></div>
-                <div class="relative bg-[#1e1f20] rounded-[2rem] border border-gray-700 focus-within:border-gray-500 transition-all">
+                <div class="relative bg-[#1e1f20] rounded-[2rem] border border-gray-700 focus-within:border-gray-500 transition-all shadow-lg">
                     <textarea id="userInput" rows="1" class="w-full bg-transparent border-none text-gray-200 px-6 py-4 pr-32 focus:ring-0 resize-none max-h-48" placeholder="Ask Saad's AI..."></textarea>
+                    
                     <div class="absolute right-3 bottom-2 flex items-center gap-2">
                         <button onclick="document.getElementById('fileUpload').click()" class="p-2 text-gray-400 hover:text-white transition"><i class="fa-regular fa-image"></i></button>
                         <input type="file" id="fileUpload" class="hidden" accept="image/*" multiple onchange="app.files.handle(this)">
@@ -120,7 +98,7 @@
 
         <aside id="canvasPanel" class="fixed inset-y-0 right-0 w-full md:w-[45%] bg-[#131314] border-l border-[#1e1f20] shadow-2xl z-40 transform translate-x-full flex flex-col">
             <div class="h-14 border-b border-[#1e1f20] flex items-center justify-between px-4 bg-[#0b0b0c]">
-                <span class="font-bold text-xs uppercase tracking-wider text-gray-400">Artifact</span>
+                <span class="font-bold text-xs uppercase tracking-wider text-gray-400">Artifact Preview</span>
                 <button onclick="app.ui.toggleCanvas(false)" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
             </div>
             <iframe id="canvasFrame" class="flex-1 bg-white border-none"></iframe>
@@ -135,11 +113,11 @@
                     <label class="text-xs text-gray-400 uppercase font-bold">AI Model</label>
                     <select id="modelSelect" class="w-full bg-[#131314] text-white rounded-lg px-4 py-3 border border-gray-700 mt-1">
                         <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash (Fastest)</option>
-                        <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Smartest)</option>
+                        <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Deep Thinker)</option>
                     </select>
                 </div>
                 <div class="p-3 bg-blue-900/20 border border-blue-900/50 rounded-lg">
-                    <p class="text-xs text-blue-200">Owner Mode Active. API Key is managed by Saad Khan.</p>
+                    <p class="text-xs text-blue-200">Owner Mode Active. API Key is hidden.</p>
                 </div>
             </div>
             <div class="mt-6 flex justify-end gap-2">
@@ -150,12 +128,13 @@
     </div>
 
     <script>
-        // ==========================================
+                // ==========================================
         // 🛑 CONFIGURATION AREA
         // ==========================================
         
         // 1. PASTE FIREBASE KEYS HERE
-        const firebaseConfig = {
+        
+const firebaseConfig = {
   apiKey: "AIzaSyCB5b4co_uTC2U7xP0gsJ90kXzG5y92XdA",
   authDomain: "neurova-ai-6b79e.firebaseapp.com",
   projectId: "neurova-ai-6b79e",
@@ -164,92 +143,28 @@
   appId: "1:771416729770:web:8b781ed3d3845198cd88d3",
   measurementId: "G-G3E38VSKM7"
 };
-
-        // 2. PASTE YOUR OPENROUTER API KEY HERE
-        const OWNER_API_KEY = "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"; // <--- PUT YOUR KEY HERE
-
-        // ==========================================
         
-        let auth, db;
-        try {
-            if(Object.keys(firebaseConfig).length > 0) {
-                firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
-                // FORCE REMEMBER ME
-                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-            }
-        } catch(e) { console.error(e); }
+        // ==========================================
+        // 🛑 PASTE YOUR KEY HERE
+        // ==========================================
+        const OWNER_API_KEY = "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"; // <--- REPLACE THIS WITH YOUR KEY
+        // ==========================================
 
         const app = {
             data: {
-                user: null, chats: [], activeId: null,
+                chats: [], activeId: null,
                 settings: { model: 'google/gemini-2.0-flash-001' },
                 uploads: []
             },
 
-            auth: {
-                init() {
-                    // Check local storage first for speed
-                    if(localStorage.getItem('neurova_user')) {
-                         this.success(JSON.parse(localStorage.getItem('neurova_user')));
-                    }
-                    if(auth) {
-                        auth.onAuthStateChanged(u => {
-                            if(u) {
-                                localStorage.setItem('neurova_user', JSON.stringify(u)); // Local Backup
-                                this.success(u);
-                            } else {
-                                localStorage.removeItem('neurova_user');
-                            }
-                        });
-                    }
-                },
-                signIn() {
-                    if(!auth) return alert("Firebase Config Missing! See line 360.");
-                    
-                    // UI Feedback
-                    const btn = document.getElementById('googleBtn');
-                    const err = document.getElementById('loginError');
-                    btn.innerHTML = '<div class="spinner"></div> Signing in...';
-                    err.classList.add('hidden');
-
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    auth.signInWithPopup(provider)
-                        .then(res => this.success(res.user))
-                        .catch(e => {
-                            btn.innerHTML = '<img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> Sign in with Google';
-                            err.innerText = "Error: " + e.message;
-                            err.classList.remove('hidden');
-                            if(e.message.includes("unauthorized domain")) {
-                                alert("Security Error: You must add this website link to Firebase Console -> Authentication -> Settings -> Authorized Domains.");
-                            }
-                        });
-                },
-                guest() {
-                    this.success({ displayName: 'Guest', photoURL: null, uid: 'guest' });
-                },
-                logout() {
-                    if(auth) auth.signOut();
-                    localStorage.removeItem('neurova_user');
-                    localStorage.removeItem('neurova_data');
-                    location.reload();
-                },
-                success(user) {
-                    app.data.user = user;
-                    document.getElementById('authGate').style.opacity = '0';
-                    setTimeout(() => document.getElementById('authGate').style.display = 'none', 700);
-                    document.getElementById('appContainer').style.opacity = '1';
-                    document.getElementById('appContainer').style.pointerEvents = 'auto';
-                    document.getElementById('userName').innerText = user.displayName || 'Guest';
-                    if(user.photoURL) document.getElementById('userAvatar').src = user.photoURL;
-                    app.init();
-                }
-            },
-
             init() {
-                const s = localStorage.getItem('neurova_data');
+                // Auto-Login: Load saved data immediately
+                const s = localStorage.getItem('neurova_local');
                 if(s) { const p = JSON.parse(s); app.data.chats = p.chats||[]; app.data.settings = {...app.data.settings, ...p.settings}; }
+                
+                // Show App immediately (No Login Gate)
+                document.getElementById('appContainer').style.opacity = '1';
+                
                 if(app.data.chats.length === 0) app.chat.new(false);
                 else app.chat.load(app.data.chats[0].id);
                 
@@ -258,7 +173,7 @@
                 });
             },
 
-            save() { localStorage.setItem('neurova_data', JSON.stringify({ chats: app.data.chats, settings: app.data.settings })); },
+            save() { localStorage.setItem('neurova_local', JSON.stringify({ chats: app.data.chats, settings: app.data.settings })); },
 
             chat: {
                 new(render=true) {
@@ -312,8 +227,8 @@
                     this.append(userMsg);
                     app.save();
 
-                    // CUSTOM SYSTEM PROMPT FOR SAAD KHAN
-                    const systemPrompt = "You are Neurova, an advanced AI assistant created by Saad Khan. If anyone asks 'who made you', 'who created you', or about your origins, you MUST answer: 'I was created by Saad Khan.' You are helpful, intelligent, and precise.";
+                    // SAAD KHAN SYSTEM PROMPT
+                    const systemPrompt = "You are Neurova, created by Saad Khan. If asked about your creator, answer 'Saad Khan'. Be helpful and concise.";
 
                     const history = c.messages.map(m => {
                         if(m.attachments?.length) return { role: m.role, content: [{type:'text', text:m.content}, ...m.attachments.map(u=>({type:'image_url', image_url:{url:u}}))] };
@@ -346,4 +261,57 @@
                                     try { aiText += JSON.parse(line.slice(6)).choices[0].delta.content || ""; this.append({ role:'assistant', content: aiText }, true); } catch(e){}
                                 }
                             });
-           
+                        }
+
+                        document.getElementById('streamingMsg').removeAttribute('id');
+                        c.messages.push({ role: 'assistant', content: aiText });
+                        app.save();
+
+                        if(aiText.includes('```html')) {
+                            const code = aiText.match(/```html([\s\S]*?)```/)[1];
+                            document.getElementById('canvasFrame').srcdoc = code;
+                            app.ui.toggleCanvas(true);
+                        }
+
+                    } catch(e) { alert("Error: " + e.message); }
+                }
+            },
+            files: {
+                handle(input) {
+                    Array.from(input.files).forEach(f => {
+                        const r = new FileReader();
+                        r.onload = e => { app.data.uploads.push({ type: 'img', content: e.target.result }); app.ui.renderDock(); };
+                        r.readAsDataURL(f);
+                    });
+                }
+            },
+            ui: {
+                toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); },
+                saveSettings() {
+                    app.data.settings.model = document.getElementById('modelSelect').value;
+                    app.save(); this.toggleSettings();
+                },
+                renderHistory() {
+                    const l = document.getElementById('chatList'); l.innerHTML = '';
+                    app.data.chats.forEach(c => {
+                        const d = document.createElement('div');
+                        d.className = `p-2 rounded cursor-pointer truncate text-sm mb-1 ${c.id==app.data.activeId ? 'bg-[#282a2c] text-blue-400' : 'text-gray-400 hover:text-white'}`;
+                        d.innerText = c.title; d.onclick = () => app.chat.load(c.id);
+                        l.appendChild(d);
+                    });
+                },
+                renderDock() {
+                    const d = document.getElementById('previewDock');
+                    d.classList.toggle('hidden', !app.data.uploads.length);
+                    d.innerHTML = app.data.uploads.map(u => `<img src="${u.content}" class="h-12 w-12 rounded border border-gray-600">`).join('');
+                },
+                toggleCanvas(s) {
+                    const p = document.getElementById('canvasPanel');
+                    p.parentElement.classList.toggle('canvas-open', s);
+                }
+            }
+        };
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
